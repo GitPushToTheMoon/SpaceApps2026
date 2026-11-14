@@ -182,6 +182,75 @@ Return JSON with exactly these keys:
 - "data_gaps": list of ADDITIONAL short gaps not already listed (usually empty)
 """
 
+PLACEMENT_PROMPT = """You are a stowage-planning assistant for a crewed {destination}
+surface mission. An engineer is placing one item in the spacecraft. Code has
+ALREADY rated the fire risk of each location in each mission phase, using NASA
+microgravity combustion data. Your job is ONLY to suggest fixes, chosen from
+what is listed below, and explain them in plain English.
+
+Rules:
+- Never change a risk rating. Use the ratings below exactly as given.
+- A location counts as safe only if it is acceptable in BOTH phases
+  (in-space cruise and surface operations). Never suggest a fix that helps one
+  phase but leaves the other phase High.
+- Fix types you may use:
+    "move"          - move the item to a location from "Candidate locations"
+                      (use its exact id). Never invent a location.
+    "separate"      - keep it in place but add distance or a barrier from the
+                      neighboring item named in the reason
+    "contain"       - put it in a fire-resistant bag or container
+    "swap_material" - replace one of the item's listed materials with a less
+                      flammable one (name which listed material)
+- For "move", prefer candidates with better crew access. The engineer makes the
+  final choice; you only suggest.
+- When explaining a flag, name the phase (cruise or surface), the condition
+  (e.g. low airflow during cruise, higher oxygen on the surface) and any
+  neighboring item that caused it.
+- Use ONLY numbers that appear below. Copy them exactly; do not calculate,
+  convert, estimate or invent numbers.
+- Cite experiments only by the ids in the evidence list, e.g. (PSI-99-2-8).
+- {gravity_note}
+- Launch is out of scope; do not give advice about it.
+- Plain words only: no internal terms like "match distance".
+- This is a planning aid, not a safety certification; M&P and S&MA approve.
+
+Item:
+{item}
+
+Mission conditions:
+{conditions}
+
+Current location: {current_id} ({current_module})
+Nearby items at current location:
+{neighbors}
+
+Risk at current location (decided by code):
+{current_ratings}
+Overall (worse of the two phases): {current_overall}
+
+Candidate locations (risk decided by code; best crew access first):
+{candidates}
+
+Evidence (each line is exact, from the data):
+{evidence}
+
+Data gaps already shown to the user (do not repeat them):
+{known_gaps}
+
+Return JSON with exactly these keys:
+- "summary": 1-2 sentences. Say whether the current placement is acceptable in
+  both phases; if not, name the phase, the condition and any neighboring item.
+- "options": list of up to 4 fixes, best first (empty list if the current
+  placement is already Low in both phases). Each option is an object with:
+    "type": one of "move", "separate", "contain", "swap_material"
+    "location_id": the candidate id for "move", otherwise null
+    "action": one short instruction an engineer or crew member could follow
+    "why": one sentence saying which phase(s) it fixes and how
+- "recommended": 0-based index of the best option in "options", or null if
+  there are no options
+- "data_gaps": list of ADDITIONAL short gaps not already listed (usually empty)
+"""
+
 # Fields the AI sees. source_quote / verified stay internal.
 EXPERIMENT_FIELDS = [
     "id", "name", "investigation", "fuel_type", "material",
@@ -201,6 +270,14 @@ def _clean(d: Dict) -> Dict:
     return out
 
 
+def _gravity_note(conditions: Dict) -> str:
+    gravity = float(conditions.get("gravity_g") or 0)
+    if gravity > 0:
+        return (f"The user's habitat has {gravity} g gravity, but all experiments are "
+                "microgravity; there is no partial-gravity data (already listed in the gaps).")
+    return "The user's habitat is in microgravity, like the experiments."
+
+
 def analyze_experiment(row: Dict) -> dict:
     """Used by analyze.py: one experiment row -> summary/relevance JSON."""
     return ask_json(ANALYZE_PROMPT.format(row=json.dumps(_clean(row), indent=2, default=str)))
@@ -210,19 +287,191 @@ def assess(conditions: Dict, risk_level: str, reason: str,
            evidence_lines: List[str], known_gaps: Optional[List[str]] = None) -> dict:
     """Used by POST /assess: the code has already decided risk_level and evidence;
     the AI only writes the explanation (main.py checks its numbers)."""
-    gravity = float(conditions.get("gravity_g") or 0)
-    if gravity > 0:
-        gravity_note = (f"The user's habitat has {gravity} g gravity, but all experiments are "
-                        "microgravity; there is no partial-gravity data (already listed in the gaps).")
-    else:
-        gravity_note = "The user's habitat is in microgravity, like the experiments."
-
     prompt = RISK_PROMPT.format(
-        gravity_note=gravity_note,
+        gravity_note=_gravity_note(conditions),
         conditions=json.dumps(conditions, indent=2),
         risk_level=risk_level,
         reason=reason,
         evidence="\n".join(f"- {line}" for line in evidence_lines) or "- (none)",
         known_gaps="\n".join(f"- {g}" for g in (known_gaps or [])) or "- (none)",
+    )
+    return ask_json(prompt)
+
+
+# ---------------------------------------------------------------- placement
+
+# Matches the Stowage Fire-Risk Planner prototype: a Moon/Mars mission = cruise + surface stay.
+# (Prototype JSON names: "in_space_cruise_microgravity" / "surface_operations".)
+PHASES = ("cruise", "surface")
+RISK_ORDER = {"Low": 0, "Medium": 1, "High": 2}
+FIX_TYPES = {"move", "separate", "contain", "swap_material"}
+MAX_OPTIONS = 4
+
+
+def _rank(risk: str) -> int:
+    return RISK_ORDER.get(risk, RISK_ORDER["High"])  # unknown rating counts as High
+
+
+def _phase_risk(ratings: Dict[str, Dict], phase: str) -> str:
+    """A missing phase counts as High (unknown is not safe) instead of crashing."""
+    return (ratings.get(phase) or {}).get("risk", "High")
+
+
+def overall_risk(ratings: Dict[str, Dict]) -> str:
+    """Overall rating = the worse of the two phases."""
+    return max((_phase_risk(ratings, p) for p in PHASES), key=_rank)
+
+
+def _fmt_ratings(ratings: Dict[str, Dict]) -> str:
+    return "\n".join(f"- {p}: {_phase_risk(ratings, p)} "
+                     f"({(ratings.get(p) or {}).get('reason', 'no reason given')})"
+                     for p in PHASES)
+
+
+def _usable_candidates(current: Dict, candidates: List[Dict]) -> List[Dict]:
+    """Code decides which locations are allowed as a 'move' target:
+    no worse than the current spot in either phase, and better overall
+    (or Low in both). The AI never sees the others."""
+    cur = current["ratings"]
+    cur_overall = _rank(overall_risk(cur))
+    keep = []
+    for c in candidates:
+        r = c["ratings"]
+        if any(_rank(_phase_risk(r, p)) > _rank(_phase_risk(cur, p)) for p in PHASES):
+            continue
+        cand_overall = _rank(overall_risk(r))
+        if cand_overall < cur_overall or cand_overall == RISK_ORDER["Low"]:
+            keep.append(c)
+    # best crew access first (higher number = easier access)
+    return sorted(keep, key=lambda c: -(c.get("crew_access") or 0))
+
+
+def _fmt_candidates(cands: List[Dict]) -> str:
+    if not cands:
+        return "- (none: no location is safer in both phases; use separate/contain/swap_material)"
+    lines = []
+    for c in cands:
+        r = c["ratings"]
+        pre = " (pre-cleared)" if c.get("pre_cleared") else ""
+        lines.append(f"- {c['id']} ({c.get('module', '?')}){pre}: "
+                     f"cruise {_phase_risk(r, 'cruise')}, surface {_phase_risk(r, 'surface')}, "
+                     f"crew access {c.get('crew_access', 'not reported')}")
+    return "\n".join(lines)
+
+
+def _validate_placement(result: Dict, allowed_ids: set, item_materials: List[str]) -> Dict:
+    """Throw away anything the AI made up: unknown fix types, moves to locations
+    the code didn't allow, swaps of materials the item doesn't have."""
+    raw = result.get("options") or []
+    rec_raw = result.get("recommended")
+    options = []
+    rec = None
+    for i, o in enumerate(raw if isinstance(raw, list) else []):
+        if not isinstance(o, dict) or o.get("type") not in FIX_TYPES:
+            continue
+        if o["type"] == "move":
+            if o.get("location_id") not in allowed_ids:
+                continue
+        else:
+            o["location_id"] = None
+        if o["type"] == "swap_material" and item_materials:
+            text = f"{o.get('action', '')} {o.get('why', '')}".lower()
+            if not any(m.lower() in text for m in item_materials):
+                continue
+        if i == rec_raw:  # the AI's pick, re-numbered after invalid options are dropped
+            rec = len(options)
+        options.append({k: o.get(k) for k in ("type", "location_id", "action", "why")})
+        if len(options) == MAX_OPTIONS:
+            break
+
+    if rec is None or rec >= len(options):  # its pick was invalid -> fall back to the first valid one
+        rec = 0 if options else None
+
+    return {
+        "summary": str(result.get("summary", "")).strip(),
+        "options": options,
+        "recommended": rec,
+        "data_gaps": [str(g) for g in (result.get("data_gaps") or []) if g],
+    }
+
+
+def advise_placement(item: Dict, current: Dict, candidates: List[Dict], conditions: Dict,
+                     evidence_lines: List[str], known_gaps: Optional[List[str]] = None,
+                     destination: str = "lunar") -> dict:
+    """Used by POST /placement. Code has already rated every location per phase;
+    the AI picks and explains fixes. Returned options are validated here
+    (run main.py's number check on summary/action/why too).
+
+    item       = {"name": str, "materials": [str], "notes": str?}
+    current    = {"id", "module", "neighbors": [{"name", "hazard"}],
+                  "ratings": {"cruise": {"risk", "reason"}, "surface": {"risk", "reason"}}}
+    candidates = [{"id", "module", "crew_access": int?, "pre_cleared": bool?, "ratings": {...}}]
+                 For the surface re-check (Isaac), pass only the pre-cleared locations.
+    conditions = {"cruise": {..., "gravity_g": 0}, "surface": {..., "gravity_g": 0.165}}
+    """
+    usable = _usable_candidates(current, candidates)
+    neighbors = current.get("neighbors") or []
+    surface = conditions.get("surface", conditions)
+
+    prompt = PLACEMENT_PROMPT.format(
+        destination=destination,
+        gravity_note=_gravity_note(surface),
+        item=json.dumps(item, indent=2),
+        conditions=json.dumps(conditions, indent=2),
+        current_id=current["id"],
+        current_module=current.get("module", "?"),
+        neighbors="\n".join(f"- {n['name']}: {n.get('hazard', 'not reported')}" for n in neighbors)
+                  or "- (none)",
+        current_ratings=_fmt_ratings(current["ratings"]),
+        current_overall=overall_risk(current["ratings"]),
+        candidates=_fmt_candidates(usable),
+        evidence="\n".join(f"- {line}" for line in evidence_lines) or "- (none)",
+        known_gaps="\n".join(f"- {g}" for g in (known_gaps or [])) or "- (none)",
+    )
+    result = _validate_placement(ask_json(prompt), {c["id"] for c in usable},
+                                 item.get("materials") or [])
+    result["overall"] = overall_risk(current["ratings"])  # from code, not the AI
+    return result
+
+# ---------------------------------------------------------------- stowage planner text
+
+STOWAGE_PROMPT = """You are a fire-safety assistant for spacecraft stowage engineers.
+Code has ALREADY scored the ship's fire risk from NASA microgravity combustion data.
+Your job is ONLY to write short plain-English text about those results.
+
+Rules:
+- Never change, recalculate or invent a score, level or any other number. If you
+  mention a number, copy it exactly from the facts below.
+- Mention rooms only by the exact names listed below.
+- Explain WHY using the factors and items given (e.g. thin acrylic panels next to a
+  laptop, low airflow, cotton towels with no test data).
+- Actions must be things an engineer could do: move a named item to a lower-risk
+  room, bag or contain it, swap it for a less flammable listed material, add a smoke
+  detector or extinguisher, improve airflow. Highest-risk rooms first.
+- Say when a score is an estimate because an item has no NASA test data.
+- {gravity_note}
+- Launch is out of scope.
+- This is a planning aid, not a safety certification.
+
+Mission:
+{scenario}
+
+Scores (decided by code):
+{facts}
+
+Return JSON with exactly these keys:
+- "phases": {{"<phase name>": "<1-2 sentence summary>"}} for each phase listed
+- "rooms": {{"<room name>": "<1-2 sentence rationale>"}} for each STOCKED room
+- "actions": list of up to 5 {{"severity": "high"|"medium"|"low", "room": "<room name or null>", "title": "<one short instruction>"}}, most important first
+- "hazards": list of up to 4 short environment hazards for this mission
+"""
+
+
+def stowage_text(scenario: Dict, facts: Dict, gravity_g: float = 0.0) -> dict:
+    """Used by POST /stowage/assess. facts = compact scores per phase and room (from scoring.py)."""
+    prompt = STOWAGE_PROMPT.format(
+        gravity_note=_gravity_note({"gravity_g": gravity_g}),
+        scenario=json.dumps(scenario, indent=2),
+        facts=json.dumps(facts, indent=2),
     )
     return ask_json(prompt)

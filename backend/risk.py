@@ -1,6 +1,6 @@
 """Risk rules, evidence sentences and number checks for POST /assess.
 
-Everything here is decided by code from the data, not the AI:
+Everything here is decided by code from the data, never by the AI:
 - the risk level (rules below)
 - the evidence sentences (built from the CSV values)
 - a check that every number in the AI's explanation is a real value
@@ -169,3 +169,44 @@ def template_explanation(risk_level: str, reason: str, evidence: List[Tuple[str,
     """Fallback when the AI is unavailable or gets a number wrong."""
     lines = " ".join(f"{s[:-1]} ({i})." for i, s in evidence[:3])
     return f"{lines} Risk is {risk_level}: {reason} This exact combination has not been tested."
+
+
+# ------------------------------------------------------------------ stowage number check
+
+_ANY_NUM = re.compile(r"(?<![A-Za-z\-])(\d+(?:\.\d+)?)")
+
+
+def collect_numbers(obj) -> List[float]:
+    """Every number inside a nested dict/list/str (scores, oxygen, sizes, days, names...)."""
+    out: List[float] = []
+    if isinstance(obj, bool) or obj is None:
+        return out
+    if isinstance(obj, (int, float)):
+        if obj == obj:  # not NaN
+            out.append(float(obj))
+    elif isinstance(obj, str):
+        out += [float(x) for x in re.findall(r"\d+(?:\.\d+)?", obj)]
+    elif isinstance(obj, dict):
+        for k, v in obj.items():
+            out += collect_numbers(k) + collect_numbers(v)
+    elif isinstance(obj, (list, tuple)):
+        for v in obj:
+            out += collect_numbers(v)
+    return out
+
+
+def all_numbers_ok(text: str, allowed: List[float]) -> Tuple[bool, List[str]]:
+    """Stricter than numbers_ok: checks EVERY number, with or without a unit
+    (stowage text mentions bare scores like 'scored 79').
+    - a number written with decimals (56.8) must match a real value exactly (within 0.05)
+    - a whole number (34) may be a rounding of a real value (within 0.6)
+    Numbers inside words or ids (e.g. 'Node1', 'PSI-69') are skipped; 0-10 are always
+    allowed (counts like '2 laptops')."""
+    bad = []
+    for num in _ANY_NUM.findall(text or ""):
+        v = float(num)
+        tol = 0.05 if "." in num else 0.6
+        if v <= 10 or any(abs(v - a) <= tol for a in allowed):
+            continue
+        bad.append(num)
+    return (not bad), bad
