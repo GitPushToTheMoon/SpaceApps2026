@@ -2,7 +2,6 @@
 
 Run from the repo root:  python -m backend.analyze
 """
-
 import argparse
 import json
 import math
@@ -54,7 +53,11 @@ def clean_row(row: pd.Series) -> dict:
 def tidy(raw: dict) -> dict:
     """Keep only allowed values and check the shape against schemas.Analysis."""
     raw = dict(raw)
-    raw["environments"] = [e for e in raw.get("environments") or [] if e in ALLOWED_ENVIRONMENTS]
+    envs = [e for e in raw.get("environments") or [] if e in ALLOWED_ENVIRONMENTS]
+    for always in ("spacecraft", "space station"):  # every test is microgravity
+        if always not in envs:
+            envs.insert(0, always)
+    raw["environments"] = list(dict.fromkeys(envs))
     if raw.get("category") not in ALLOWED_CATEGORIES:
         raw["category"] = "other"
     score = raw.get("fire_safety_relevance")

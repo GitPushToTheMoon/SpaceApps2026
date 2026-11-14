@@ -21,6 +21,11 @@ load_dotenv()
 MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
 FALLBACK_MODEL = os.environ.get("GEMINI_FALLBACK_MODEL") or None
 USE_VERTEX = os.environ.get("USE_VERTEX", "").lower() in ("1", "true", "yes")
+# Optional: limit "thinking" so answers come back faster (fewer 504 timeouts).
+#   GEMINI_THINKING_LEVEL=low       (newer models: "low"/"medium"/"high"/"minimal")
+#   GEMINI_THINKING_BUDGET=0        (older 2.5 models: token budget, 0 = off)
+THINKING_LEVEL = os.environ.get("GEMINI_THINKING_LEVEL") or None
+THINKING_BUDGET = os.environ.get("GEMINI_THINKING_BUDGET")
 
 RETRYABLE = {429, 500, 503, 504}   # rate limit / overloaded / temporary server errors
 MAX_ATTEMPTS = 4                   # per model
@@ -53,6 +58,14 @@ def client():
     return _client
 
 
+def _thinking_config() -> Optional[types.ThinkingConfig]:
+    if THINKING_LEVEL:
+        return types.ThinkingConfig(thinking_level=THINKING_LEVEL)
+    if THINKING_BUDGET not in (None, ""):
+        return types.ThinkingConfig(thinking_budget=int(THINKING_BUDGET))
+    return None
+
+
 def _call(model: str, prompt: str) -> dict:
     resp = client().models.generate_content(
         model=model,
@@ -60,9 +73,12 @@ def _call(model: str, prompt: str) -> dict:
         config=types.GenerateContentConfig(
             response_mime_type="application/json",
             temperature=0.2,
+            thinking_config=_thinking_config(),
         ),
     )
-    text = (resp.text or "").strip()
+    # read only the text parts (skips hidden "thought_signature" parts, no warning)
+    parts = resp.candidates[0].content.parts if resp.candidates and resp.candidates[0].content else []
+    text = "".join(p.text for p in (parts or []) if getattr(p, "text", None)).strip()
     if not text:
         raise ValueError("Empty response from Gemini")
     return json.loads(text)
@@ -81,33 +97,57 @@ def ask_json(prompt: str) -> dict:
                 last_error = e
                 if e.code not in RETRYABLE:
                     raise  # bad key, bad request, etc. -- retrying won't help
+                print(f"[ai] {model} attempt {attempt + 1}/{MAX_ATTEMPTS}: {e.code} {e.status}, retrying...")
             except (json.JSONDecodeError, ValueError) as e:
                 last_error = e  # model returned bad JSON; try again
             if attempt < MAX_ATTEMPTS - 1:
                 time.sleep(BASE_DELAY_S * (2 ** attempt))
         print(f"[ai] {model} failed after {MAX_ATTEMPTS} attempts: {last_error}")
 
-    raise AIUnavailable(f"Gemini unavailable: {last_error}")
+    raise AIUnavailable(str(last_error))
 
 
 # ---------------------------------------------------------------- prompts
 
 ANALYZE_PROMPT = """You are helping build a fire-safety research dashboard from NASA
 microgravity combustion experiments. Use ONLY the experiment data below.
-Do not invent numbers. If something is not in the data, say "not reported".
+Do not invent numbers or outcomes. Do not overstate results: if the data says
+"burn time 70 s", do not call it a complete burn. If something is not in the
+data, say "not reported".
 
 Experiment data:
 {row}
 
 Return JSON with exactly these keys:
-- "summary": 2-3 sentence plain-English summary of what was tested and what happened
-- "fire_safety_relevance": integer 1-10 (how useful for fire safety in crewed habitats:
-   spacecraft cabins, space stations, Moon/Mars habitats, pressurized rovers)
-- "relevance_reason": one sentence explaining the score
-- "environments": list chosen from ["spacecraft", "space station", "lunar base",
-   "mars base", "pressurized rover", "earth"]
-- "category": one of ["prevention", "detection", "suppression", "other"]
-- "key_findings": list of up to 3 short findings, each grounded in the data above
+
+- "summary": 2-3 plain-English sentences: what was tested, under what conditions,
+  and what happened.
+
+- "fire_safety_relevance": integer 1-10, using this scale so scores spread out:
+    9-10: real cabin materials (fabrics, plastics) burning or failing to burn at
+          21% oxygen or higher, or results directly about putting fires out
+          (suppression) or detecting them
+    6-8:  useful related evidence: materials at lower oxygen, small samples,
+          liquid or gas fuels with a clear finding about flammability limits,
+          extinction or suppression (e.g. CO2 or helium added)
+    3-5:  mostly basic combustion science with only an indirect link to crew safety
+    1-2:  little or no fire-safety value (e.g. outcome not reported)
+
+- "relevance_reason": one sentence explaining the score.
+
+- "environments": always include "spacecraft" and "space station" (all tests are
+  in microgravity). Add "lunar base", "mars base" and "pressurized rover" ONLY if
+  the oxygen is 25% or higher or pressure is below 12 psi (planned habitat
+  atmospheres are lower pressure and higher oxygen). Add "earth" only if the result
+  clearly matters for fire safety on Earth too.
+
+- "category": exactly one of:
+    "prevention"  - flammability / material / ignition tests
+    "suppression" - extinguishment, diluent gases (CO2, helium), flame going out
+    "detection"   - smoke, sensors, early warning
+    "other"       - none of the above
+
+- "key_findings": up to 3 short findings, each stated in the data above.
 """
 
 RISK_PROMPT = """You are a fire-safety research assistant. A user describes habitat
