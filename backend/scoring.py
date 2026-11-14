@@ -325,21 +325,31 @@ def score_ship(spaces: List[dict], oxygen_pct: float, gravity_g: float = 0.0) ->
     return {"score": ship, "level": level(ship), "rooms": rooms}
 
 
-def score_mission(spaces: List[dict], phases: Dict[str, dict]) -> dict:
+def overall_from_phases(phase_scores: Dict[str, float], days: Dict[str, float]) -> float:
+    """0.6 x worse phase + 0.4 x day-weighted average (one phase -> that phase's score)."""
+    if len(phase_scores) == 1:
+        return next(iter(phase_scores.values()))
+    d = {n: max(0.0, _num(days.get(n)) or 0.0) for n in phase_scores}
+    total = sum(d.values())
+    if total == 0:
+        d, total = {n: 1.0 for n in phase_scores}, float(len(phase_scores))
+    weighted = sum(phase_scores[n] * d[n] for n in phase_scores) / total
+    return round(0.6 * max(phase_scores.values()) + 0.4 * weighted, 1)
+
+
+def score_mission(spaces: List[dict], phases: Dict[str, dict],
+                  spaces_by_phase: Optional[Dict[str, List[dict]]] = None) -> dict:
     """phases = {"cruise": {"oxygen_pct", "gravity_g", "days"},
                  "surface": {"oxygen_pct", "gravity_g", "days"}}   (surface optional)
+    spaces_by_phase: optional per-phase copies of the spaces (e.g. reduced cruise airflow).
     Returns per-phase ship + room scores and the overall score."""
-    results = {name: score_ship(spaces, float(p["oxygen_pct"]), float(p.get("gravity_g") or 0))
-               for name, p in phases.items()}
+    results = {}
+    for name, p in phases.items():
+        phase_spaces = (spaces_by_phase or {}).get(name, spaces)
+        results[name] = score_ship(phase_spaces, float(p["oxygen_pct"]), float(p.get("gravity_g") or 0))
 
-    if len(results) == 1:
-        overall = next(iter(results.values()))["score"]
-    else:
-        days = {n: max(0.0, _num(phases[n].get("days")) or 0.0) for n in results}
-        total = sum(days.values()) or float(len(results))
-        weighted = sum(results[n]["score"] * (days[n] or 1.0) for n in results) / total
-        overall = round(0.6 * max(r["score"] for r in results.values()) + 0.4 * weighted, 1)
-
+    overall = overall_from_phases({n: r["score"] for n, r in results.items()},
+                                  {n: phases[n].get("days") for n in results})
     return {
         "overall": {"score": overall, "level": level(overall)},
         "phases": {n: {"score": r["score"], "level": r["level"]} for n, r in results.items()},
