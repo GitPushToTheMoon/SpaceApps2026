@@ -144,7 +144,8 @@ class PlacementConditions(BaseModel):
 
 
 class PlacementPhases(BaseModel):
-    pre_launch: Optional[PlacementConditions] = None
+    model_config = {"extra": "forbid"}
+    cruise: Optional[PlacementConditions] = None
     surface: Optional[PlacementConditions] = None
 
 

@@ -67,3 +67,15 @@ gcloud run deploy flame-api --source . --region us-west1 \
 ```
 Cloud Run needs a start command; add a `Procfile` containing:
 `web: uvicorn backend.main:app --host 0.0.0.0 --port $PORT`
+
+
+## Numeric stowage planner
+`POST /planner/assess` scores cruise-only, lunar, or Mars ship inventories with
+verified experiment material screens and explicitly labeled prototype layout weights.
+It runs without Gemini. Try `data/planner_example.json` in `/docs`; see `API.md`
+for formulas, unknown-score ranges, equipment fields, and the frontend contract.
+Placement phases are now `cruise` and `surface`; `pre_launch` is rejected.
+Run backend regression tests with:
+```
+.\.venv\Scripts\python.exe -B -m unittest discover -s tests -v
+```

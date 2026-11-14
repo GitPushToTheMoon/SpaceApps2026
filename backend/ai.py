@@ -192,7 +192,7 @@ what is listed below, and explain them in plain English.
 Rules:
 - Never change a risk rating. Use the ratings below exactly as given.
 - A location counts as safe only if it is acceptable in BOTH phases
-  (pre-launch and surface). Never suggest a fix that helps one phase but
+  (cruise and surface). Never suggest a fix that helps one phase but
   leaves either phase high or insufficient data. Never claim a fix is proven safe.
 - Fix types you may use:
     "move"          - move the item to a location from "Candidate locations"
@@ -210,7 +210,7 @@ Rules:
   convert, estimate or invent numbers.
 - Cite experiments only by the ids in the evidence list, e.g. (PSI-99-2-8).
 - {gravity_note}
-- Transit is out of scope; do not give advice about it.
+- Launch is out of scope; consider cruise and surface operations only.
 - Plain words only: no internal terms like "match distance".
 - This is a planning aid, not a safety certification; M&P and S&MA approve.
 
@@ -300,7 +300,7 @@ def assess(conditions: Dict, risk_level: str, reason: str,
 
 # ---------------------------------------------------------------- placement
 
-PHASES = ("pre_launch", "surface")
+PHASES = ("cruise", "surface")
 RISK_ORDER = {"low": 0, "elevated": 1, "high": 2}
 FIX_TYPES = {"move", "separate", "contain", "swap_material"}
 MAX_OPTIONS = 4
@@ -358,7 +358,7 @@ def _fmt_candidates(cands: List[Dict]) -> str:
         r = c.get("ratings") or {}
         pre = " (pre-cleared)" if c.get("pre_cleared") else ""
         lines.append(f"- {c['id']} ({c.get('module', '?')}){pre}: "
-                     f"pre_launch {r['pre_launch']['risk']}, surface {r['surface']['risk']}, "
+                     f"cruise {r['cruise']['risk']}, surface {r['surface']['risk']}, "
                      f"crew access {c.get('crew_access', 'not reported')}")
     return "\n".join(lines)
 
@@ -426,10 +426,10 @@ def advise_placement(item: Dict, current: Dict, candidates: List[Dict], conditio
 
     item       = {"name": str, "materials": [str], "notes": str?}
     current    = {"id", "module", "neighbors": [{"name", "hazard"}],
-                  "ratings": {"pre_launch": {"risk", "reason"}, "surface": {"risk", "reason"}}}
+                  "ratings": {"cruise": {"risk", "reason"}, "surface": {"risk", "reason"}}}
     candidates = [{"id", "module", "crew_access": int?, "pre_cleared": bool?, "ratings": {...}}]
                  For the surface re-check (Isaac), pass only the pre-cleared locations.
-    conditions = {"pre_launch": {...}, "surface": {..., "gravity_g": 0.16}}
+    conditions = {"cruise": {...}, "surface": {..., "gravity_g": 0.16}}
     """
     usable = _usable_candidates(current, candidates)
     neighbors = current.get("neighbors") or []
@@ -437,7 +437,7 @@ def advise_placement(item: Dict, current: Dict, candidates: List[Dict], conditio
 
     prompt = PLACEMENT_PROMPT.format(
         destination=destination,
-        gravity_note="Pre-launch is on Earth at normal gravity; microgravity evidence does not validate it. " + (_gravity_note(surface) if surface else "Surface conditions are not reported; do not assume microgravity."),
+        gravity_note="Cruise is in microgravity, like the experiment dataset. Launch is out of scope. " + (_gravity_note(surface) if surface else "Surface conditions are not reported; do not assume microgravity."),
         item=json.dumps(item, indent=2),
         conditions=json.dumps(conditions, indent=2),
         current_id=current["id"],

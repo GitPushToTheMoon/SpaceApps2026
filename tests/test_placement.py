@@ -1,6 +1,7 @@
 import unittest
 from unittest.mock import patch
 from fastapi import HTTPException
+from pydantic import ValidationError
 from backend import ai, main, placement
 from backend.schemas import PlacementRequest
 
@@ -10,7 +11,7 @@ def option(kind="contain", location=None, action="Contain the item"):
 
 
 def location(ident, pre="low", surface="low"):
-    return {"id": ident, "ratings": {"pre_launch": {"risk": pre}, "surface": {"risk": surface}}}
+    return {"id": ident, "ratings": {"cruise": {"risk": pre}, "surface": {"risk": surface}}}
 
 
 class PlacementTests(unittest.TestCase):
@@ -40,12 +41,12 @@ class PlacementTests(unittest.TestCase):
         self.assertEqual(result["data_gaps"], ["Gravity is unvalidated."])
         self.assertFalse(ai._placement_numbers_ok("Add 7 layers", "21% oxygen"))
 
-    def test_endpoint_and_both_gravity_gaps(self):
+    def test_endpoint_and_surface_gravity_gap(self):
         req = PlacementRequest(item={"name": "Panel", "materials": ["PMMA"]}, current_location_id="demo_cabin")
         with patch.object(ai, "ask_json", return_value={"summary": "Review phase ratings.", "options": [], "data_gaps": []}):
             result = main.placement_advice(req)
         self.assertTrue(result.evidence)
-        self.assertTrue(any("Earth normal gravity" in g for g in result.data_gaps))
+        self.assertFalse(any("Earth normal gravity" in g for g in result.data_gaps))
         self.assertTrue(any("surface gravity" in g for g in result.data_gaps))
         self.assertIn("/placement", main.app.openapi()["paths"])
 
@@ -68,10 +69,15 @@ class PlacementTests(unittest.TestCase):
         with self.assertRaises(HTTPException):
             placement.evaluate(req)
 
-    def test_prelaunch_must_use_earth_gravity(self):
+    def test_removed_prelaunch_field_is_rejected(self):
+        with self.assertRaises(ValidationError):
+            PlacementRequest(item={"name":"Panel","materials":["PMMA"]},current_location_id="x",
+                             locations=[{"id":"x","module":"Cabin","crew_access":3,"conditions":{"pre_launch":None}}])
+
+    def test_cruise_must_use_microgravity(self):
         req = PlacementRequest(item={"name": "Panel", "materials": ["PMMA"]}, current_location_id="demo_cabin")
         req.locations = placement.load_locations()
-        req.locations[0].conditions.pre_launch.gravity_g = 0
+        req.locations[0].conditions.cruise.gravity_g = 1
         with self.assertRaises(HTTPException):
             placement.evaluate(req)
 

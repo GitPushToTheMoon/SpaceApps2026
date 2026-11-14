@@ -35,11 +35,9 @@ def evaluate(req: PlacementRequest) -> PlacementResponse:
                 loc["ratings"][phase] = {"risk": "insufficient data", "reason": "Phase conditions not reported."}
                 gaps.append(f"{location.id} {phase}: phase conditions not reported.")
                 continue
-            if phase == "pre_launch" and cond["gravity_g"] != 1:
-                raise HTTPException(400, "pre_launch gravity_g must be 1 (Earth).")
-            if phase == "pre_launch":
-                gaps.append(f"{location.id} pre_launch: Earth normal gravity is not validated by microgravity experiments.")
-            elif cond["gravity_g"] != 0:
+            if phase == "cruise" and cond["gravity_g"] != 0:
+                raise HTTPException(400, "cruise gravity_g must be 0 (microgravity).")
+            if phase == "surface" and cond["gravity_g"] != 0:
                 gaps.append(f"{location.id} surface: surface gravity is not validated by microgravity experiments.")
             levels, reasons = [], []
             for mat in materials:

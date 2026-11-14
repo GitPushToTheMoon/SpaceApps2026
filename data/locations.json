@@ -6,11 +6,11 @@
     "pre_cleared": false,
     "neighbors": [],
     "conditions": {
-      "pre_launch": {
+      "cruise": {
         "oxygen_pct": 21,
         "pressure_psi": 14.7,
         "airflow_cm_s": 10,
-        "gravity_g": 1
+        "gravity_g": 0
       },
       "surface": {
         "oxygen_pct": 34,
@@ -27,11 +27,11 @@
     "pre_cleared": false,
     "neighbors": [],
     "conditions": {
-      "pre_launch": {
+      "cruise": {
         "oxygen_pct": 21,
         "pressure_psi": 14.7,
         "airflow_cm_s": 10,
-        "gravity_g": 1
+        "gravity_g": 0
       },
       "surface": {
         "oxygen_pct": 34,

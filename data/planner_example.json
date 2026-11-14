@@ -1,0 +1,69 @@
+{
+  "mission": "lunar",
+  "scenario": {
+    "cruise_days": 180,
+    "surface_stay_days": 30,
+    "ventilation": "normal",
+    "cruise_atmosphere": {
+      "pressure_psia": 14.7,
+      "o2_percent": 21
+    },
+    "cabin_atmosphere": {
+      "pressure_psia": 8.2,
+      "o2_percent": 34
+    }
+  },
+  "spaces": [
+    {
+      "id": "lab",
+      "name": "Lab",
+      "kind": "room",
+      "type": "Lab",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "airflow_cm_s": 14,
+      "capacity_kg": 70,
+      "items": [
+        {
+          "id": "panel",
+          "name": "PMMA panel",
+          "category": "material",
+          "material_key": "PMMA",
+          "quantity": 3,
+          "dimensions_cm": {
+            "l": 10,
+            "w": 8,
+            "h": 4
+          }
+        },
+        {
+          "id": "heater",
+          "name": "Food warmer",
+          "category": "machinery",
+          "equipment": "heater",
+          "quantity": 1,
+          "dimensions_cm": {
+            "l": 20,
+            "w": 20,
+            "h": 20
+          }
+        }
+      ]
+    },
+    {
+      "id": "locker",
+      "name": "Stowage",
+      "kind": "room",
+      "type": "Stowage",
+      "position": {
+        "x": 1,
+        "y": 0
+      },
+      "airflow_cm_s": 10,
+      "capacity_kg": 140,
+      "items": []
+    }
+  ]
+}

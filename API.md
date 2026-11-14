@@ -156,22 +156,22 @@ Optional `locations` overrides the file. A location example:
   "pre_cleared": false,
   "neighbors": [{"name": "Battery", "hazard": "Potential ignition source"}],
   "conditions": {
-    "pre_launch": {"oxygen_pct": 21, "pressure_psi": 14.7, "airflow_cm_s": 10, "gravity_g": 1},
+    "cruise": {"oxygen_pct": 21, "pressure_psi": 14.7, "airflow_cm_s": 10, "gravity_g": 0},
     "surface": {"oxygen_pct": 34, "pressure_psi": 8.2, "airflow_cm_s": 10, "gravity_g": 0.165}
   }
 }
 ```
-Missing or null phases return `insufficient data`; pre-launch gravity must be 1.
+Missing or null phases return `insufficient data`; cruise gravity must be 0.
 Materials must come from `/materials`. Each material is matched and rated with the
 same rules as `/assess`. The phase rating is high if any material is high; otherwise
 unknown evidence propagates as insufficient data; otherwise the worse known rating wins.
-These are microgravity evidence screens: Earth pre-launch and surface gravity
+These are microgravity evidence screens: Surface gravity
 remain unvalidated, with explicit data gaps. Neighbor and module hazards are
 context for suggestions, not calculated risk modifiers.
 
 Response fields: `overall`, `summary`, `options`, `recommended`, `locations`,
 `evidence`, `data_gaps`, `disclaimer`. Each returned location includes
-`ratings.pre_launch` and `ratings.surface` with `risk` and `reason`.
+`ratings.cruise` and `ratings.surface` with `risk` and `reason`.
 Ratings use `low / elevated / high / insufficient data` throughout.
 Options contain `type` (`move / separate / contain / swap_material`),
 `location_id` (only for moves), `action`, `why`. `recommended` indexes the
@@ -183,5 +183,150 @@ AI text is checked for unsupported numeric values; invalid options/gaps are drop
 and an invalid summary is replaced. This is a value check, not a guarantee that
 units, causal claims or mitigation effectiveness are correct. Engineering approval is required.
 If Gemini fails, ratings and evidence still return with empty options and an explicit gap.
-Errors: 400 unknown material/location, duplicate ids, or non-Earth pre-launch gravity;
+Errors: 400 unknown material/location, duplicate ids, or nonzero cruise gravity;
 422 invalid request shape or out-of-range conditions. Never send API keys from the frontend.
+
+
+## POST `/planner/assess` ? numeric stowage planner
+
+Deterministic scoring; no Gemini call, key or network required. `/assess` and
+`/placement` continue to return evidence ratings, not numeric planning scores.
+The planning score is not a probability, NASA certification, or a calibrated
+prediction. All layout weights and the evidence-to-points conversion are
+prototype assumptions from the handoff; material evidence comes from verified CSV rows.
+
+A complete runnable request is in `data/planner_example.json`. Minimal request:
+```json
+{
+  "mission": "lunar",
+  "scenario": {
+    "cruise_days": 180,
+    "surface_stay_days": 30,
+    "ventilation": "normal",
+    "cruise_atmosphere": {"pressure_psia": 14.7, "o2_percent": 21},
+    "cabin_atmosphere": {"pressure_psia": 8.2, "o2_percent": 34}
+  },
+  "spaces": [{
+    "id": "lab", "name": "Lab", "kind": "room", "type": "Lab",
+    "position": {"x": 0, "y": 0}, "airflow_cm_s": 14,
+    "items": [{
+      "id": "panel", "name": "PMMA panel", "category": "material",
+      "material_key": "PMMA", "quantity": 3,
+      "dimensions_cm": {"l": 10, "w": 8, "h": 4}
+    }]
+  }]
+}
+```
+
+`mission` is `cruise`, `lunar`, or `mars`; default cruise. Lunar/Mars include both
+cruise and surface. Launch is excluded. Atmospheres default to 14.7 psia / 21%
+oxygen for both phases; Mars does **not** silently assume exploration atmosphere.
+Airflow is per space in cm/s. Dimensions are cm, not mm. Volume is converted to
+litres: `l*w*h*quantity/1000`. Pressure uses psia, numerically equivalent to the
+absolute psi values used by the experiment dataset. No automatic conversion of
+gauge pressure or unlabelled dimensions from experiment descriptions is attempted.
+
+Space and item ids must be unique (item ids across the whole ship). Grid positions
+are optional, but missing positions produce a neighboring-hazard gap. Space `kind`
+is `room` or `passage`. `capacity_kg` is metadata; item mass is not available and
+capacity compliance is not calculated. Maximum 40 spaces and 100 items per space.
+Dimensions must be positive, quantity a positive integer, airflow 0-500 cm/s,
+oxygen 0-100%, pressure >0 to 50 psia, and phase durations positive. NaN/infinity
+are rejected. Invalid input returns 422.
+
+Items have category `material`, `machinery`, or `safety`; optional `material_key`,
+`ignition_source`, `oxygen_source`, `bagged`, `loose_soft_goods` (booleans).
+Recognized `equipment` values are `heater`, `3d_printer`, `li_ion`, `pump`,
+`exercise`, `consoles`, `laptop`, `fan`, `other`, `extinguisher`, `smoke_detector`,
+`breathing_mask`. Known heat equipment implies an ignition source. Use `other`
+with `ignition_source` for other machinery. A machinery item contributes material
+fuel only if a `material_key` is supplied; otherwise only its equipment hazards
+are modeled. Model casing or other fuel with material items when needed.
+Client `flammability` and `dataset_tests` metadata do not override CSV evidence.
+Custom/missing material keys are accepted as **unknown**, to support saved items.
+
+### Material evidence conversion
+
+Only verified same-material rows are ranked by oxygen, pressure and airflow,
+with the closest five used. No matches or no usable outcomes => `insufficient data`.
+The existing evidence rules determine `high` (burning near/below requested oxygen),
+`low` (non-burning evidence), or `elevated` (mixed/different conditions).
+The planner tightens `low`: every selected test must have a known non-burning
+outcome and cover all requested numeric conditions. Missing pressure/airflow
+cannot support low. Gravity, specimen construction and thickness remain gaps.
+
+Prototype conversion: `low -> 1`, `elevated -> 2`, `high -> 3` fuel points.
+These points are an ordinal planning input, not a measured flammability property.
+Unknown points span **1-3**. Score `score` and `level` are null if any material
+is unknown; `lower_bound`/`upper_bound` show the prototype range instead.
+Those bounds are not confidence intervals and do not bound unmodeled hazards.
+Even if both bounds cap at 100, unknown evidence remains explicitly unknown.
+
+### Score formulas and assumptions
+
+Per item size factor is `min(4, 1+floor(total_litres/5))`. Fuel load sums material
+points times size. Raw room points add 2 per ignition-source unit when fuel is
+present, 4 for an oxygen source with moderate/high fuel, 2 for fuel in passages,
+and subtract 1 each for detector/extinguisher presence. Room score is
+`clamp(raw*7, 0, 100)`; empty rooms score zero and are excluded from ship averages.
+Cruise adds up to 3 for loose-soft-goods units and 1 for missing detection.
+Surface adds 2 for unbagged Li-ion, 1 for ignition with moderate/high fuel,
+and Mars adds 1 for moderate/high fuel. Scenario adjustments follow the handoff:
+cruise +2 reduced ventilation with ignition and no detector, +1 normal ventilation
+with ignition and moderate/high fuel, +1 beyond 180 days, +1 low airflow with ignition;
+surface +2 exploration oxygen with moderate/high fuel, +1 exploration oxygen with
+oxygen source, +1 beyond 30 days with fuel load >=5. Exploration oxygen means >=34%.
+Same-room means near; there is no within-room distance model.
+
+Ship phase score = `0.6*max(stocked_room_scores) + 0.4*mean(stocked_room_scores)`.
+Lunar/Mars overall = `0.6*max(cruise,surface) + 0.4*duration_weighted_mean`.
+Cruise-only overall is cruise. Levels use continuous thresholds: <=20 Low,
+<=40 Guarded, <=60 Elevated, <=80 High, otherwise Severe. Rounding is for display.
+
+Seven separate factor bars are not summed into the room score:
+
+| Key | Prototype calculation (clamped 0-100) |
+|---|---|
+| materials_fuel_load | fuel/14*100 + 5 per high item |
+| oxygen_ventilation | 10 + 15 oxygen source + 40 near moderate/high fuel + 25 exploration oxygen + 10 reduced ventilation |
+| cabin_pressure | 25 for 14.7/21; 70 for 8.2/34; otherwise unknown range 0-100 |
+| airflow | under 5: 75-8*airflow; 5-15: 20; above 15: 20+6*(airflow-15) |
+| material_thickness | minimum flammable item dimension: <0.5 =>85, <2 =>55, <5 =>35, else20; no moderate/high fuel =>0 |
+| machinery_proximity | same space: 45+12 per ignition unit; neighboring ignition with moderate/high fuel:35; ignition only:20; else0 |
+| machinery_heat | heater30, printer30, Li-ion25, pump20, exercise/consoles15, laptop10, fan5, other15, times quantity capped at3; +10 low airflow with ignition |
+
+Minimum item dimension is a documented **thickness proxy**, not measured fabric
+or wall thickness. Grid Manhattan distance 1 defines neighboring modules.
+Room factor ranges propagate unknown material points; whole-ship factors return
+mean lower/upper values and min/max across stocked spaces. Unsupported pressure
+factor weights are left unknown instead of interpolated without evidence.
+
+### Response and frontend integration
+
+Top-level fields: `phases` (phase names), `ship` (phase -> score), `overall` (score),
+`rooms`, `factors`, `actions`, `hazards`, `model_info`.
+Every score object has `score`, `level`, `lower_bound`, `upper_bound`, `status`,
+`summary`. Status is `prototype` or `insufficient data`. Room objects include
+`id`, `name`, `scores` by phase, seven `factors` by phase, and `materials` by phase.
+Each material screen has `risk_level`, `points`, `verified_tests`, exact experiment
+`evidence` ids/sentences, `reason`, and `data_gaps`. These evidence labels retain
+the `/assess` vocabulary; they are distinct from five-level planning labels.
+`model_info` identifies version, prototype weights, conversion and assumptions.
+
+Actions (up to five) prioritize unknown-material reviews, then independent item
+moves with `item_id`, source `space`, `target_space_id`, uncapped before/after and
+`reduction`, then missing-detector reviews. Move candidates are recomputed using
+the destination airflow and must reduce the affected rooms' combined uncapped
+mission score without worsening either phase's combined score. Moves are disabled
+if any material is unknown. Re-run after applying each move; recommendations are
+independent and are not a guaranteed optimal batch or safety approval.
+
+The external canvas is not in this repository. Its frontend needs an adapter to
+send this ship-level request (including stable ids) and render these typed response
+objects. This endpoint is not a drop-in replacement for an undocumented `computeAI`
+object or its per-phase request. Interactive schema: `/docs`.
+
+Run the provided example from PowerShell while Uvicorn is running:
+```powershell
+Invoke-RestMethod -Method Post -Uri http://localhost:8000/planner/assess -ContentType 'application/json' -Body (Get-Content data/planner_example.json -Raw)
+```
