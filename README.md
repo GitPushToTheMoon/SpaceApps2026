@@ -90,6 +90,7 @@ Everything except `POST /assess` works without Gemini.
 | `GET /experiments` | Experiments + AI summaries, ranked by relevance. Filters: `investigation` (FLEX, SAFFIRE, BASS-II, BRE…), `material`, `fuel_type`, `outcome_category`, `environment`, `sort` |
 | `GET /experiments/{id}` | One experiment (404 if not found) |
 | `POST /assess` | Risk assessment for given conditions |
+| `POST /stowage/assess` | Fire-risk score for a ship layout (cruise + surface) |
 | `POST /admin/reload` | Re-read data files, clear cached answers |
 
 Full JSON shapes: **API.md** and **API_examples.json**.
@@ -119,6 +120,15 @@ Identical requests are cached (no extra Gemini calls). If Gemini is down after r
 backup model, `/assess` returns **502** "AI assessment unavailable"; everything else keeps working.
 
 ---
+
+## How `POST /stowage/assess` works
+1. Each item gets a material hazard from the burn/no-burn tests at that phase's oxygen
+   (`backend/scoring.py`); untested materials use their Low/Medium/High hint.
+2. Each room combines hazard, fuel load, ignition sources (its own and its neighbours'),
+   airflow and item thickness, minus credit for detectors and extinguishers.
+3. Ship and overall scores are weighted from the rooms and phases.
+4. Gemini writes the text; any number it gets wrong sends it back once, then template
+   text is used. The endpoint keeps working (200) when Gemini is down.
 
 ## Data
 

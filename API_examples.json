@@ -1,0 +1,494 @@
+{
+  "GET /materials (one item)": {
+    "material": "PMMA",
+    "display_name": "Acrylic plastic (PMMA)",
+    "fuel_type": "solid",
+    "description": "Polymethyl methacrylate sheets, rods and structured samples",
+    "investigations": [
+      "BASS-II",
+      "Saffire II",
+      "Saffire IV",
+      "Saffire V",
+      "Saffire VI"
+    ],
+    "priority": 1
+  },
+  "GET /presets (one item)": {
+    "id": "moon_habitat",
+    "display_name": "Moon habitat (exploration atmosphere)",
+    "description": "Lower pressure and higher oxygen so crews can suit up quickly for moonwalks.",
+    "pressure_psi": {
+      "default": 8.2,
+      "min": 8.2,
+      "max": 8.2
+    },
+    "oxygen_pct": {
+      "default": 34.0,
+      "min": 34.0,
+      "max": 34.0
+    },
+    "airflow_cm_s": {
+      "default": 10.0,
+      "min": 5.0,
+      "max": 20.0
+    },
+    "temperature_c": {
+      "default": 22.0,
+      "min": 18.0,
+      "max": 27.0
+    },
+    "gravity_g": 0.165,
+    "sources": [
+      {
+        "title": "NASA Exploration EVA concept of operations for Artemis (vehicle atmosphere set points)",
+        "url": "https://www.nasa.gov/wp-content/uploads/2020/01/topic_1-_eva_lunar_surface_concept_of_operations.pdf"
+      },
+      {
+        "title": "NASA Moon Fact Sheet (gravity)",
+        "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/moonfact.html"
+      }
+    ]
+  },
+  "GET /experiments (one item)": {
+    "id": "PSI-69-019",
+    "name": "FLEX test 19 (196F001) heptane droplet, 3.39 mm initial diameter",
+    "investigation": "PSI-69 Flame Extinguishment Experiment",
+    "fuel_type": "liquid",
+    "material": "heptane",
+    "oxygen_pct": {
+      "min": 34.0,
+      "max": 34.0
+    },
+    "pressure_psi": {
+      "min": 10.43,
+      "max": 10.43
+    },
+    "airflow_cm_s": {
+      "min": 0.0,
+      "max": 0.0
+    },
+    "gravity": "microgravity",
+    "outcome": "Disruption",
+    "outcome_category": "other",
+    "description": "ISS droplet combustion test on 8/26/2009; ambient mole fractions: O2 0.34, N2 0.66; pressure 539.1 mmHg. Burn time 4.2 s.",
+    "source_url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-69",
+    "analysis": {
+      "summary": "EXAMPLE TEXT: written by Gemini via analyze.py",
+      "fire_safety_relevance": 8,
+      "relevance_reason": "EXAMPLE TEXT",
+      "environments": [
+        "lunar base",
+        "pressurized rover"
+      ],
+      "category": "prevention",
+      "key_findings": [
+        "EXAMPLE TEXT"
+      ]
+    }
+  },
+  "POST /assess request": {
+    "oxygen_pct": 34.0,
+    "pressure_psi": 8.2,
+    "airflow_cm_s": 10.0,
+    "material": "heptane",
+    "gravity_g": 0.165,
+    "preset_id": "moon_habitat"
+  },
+  "POST /assess response": {
+    "risk_level": "elevated",
+    "explanation": "EXAMPLE TEXT: 3-5 sentences written by Gemini citing ids like (PSI-69-019).",
+    "evidence": [
+      {
+        "id": "PSI-69-019",
+        "what_happened": "EXAMPLE TEXT"
+      }
+    ],
+    "data_gaps": [
+      "No partial-gravity combustion data yet; results are based on microgravity tests."
+    ],
+    "matches": [
+      {
+        "id": "PSI-69-019",
+        "name": "FLEX test 19 (196F001) heptane droplet, 3.39 mm initial diameter",
+        "investigation": "PSI-69 Flame Extinguishment Experiment",
+        "fuel_type": "liquid",
+        "material": "heptane",
+        "oxygen_pct": {
+          "min": 34.0,
+          "max": 34.0
+        },
+        "pressure_psi": {
+          "min": 10.43,
+          "max": 10.43
+        },
+        "airflow_cm_s": {
+          "min": 0.0,
+          "max": 0.0
+        },
+        "gravity": "microgravity",
+        "outcome": "Disruption",
+        "outcome_category": "other",
+        "description": "ISS droplet combustion test on 8/26/2009; ambient mole fractions: O2 0.34, N2 0.66; pressure 539.1 mmHg. Burn time 4.2 s.",
+        "source_url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-69",
+        "analysis": null,
+        "match_distance": 0.43
+      }
+    ],
+    "disclaimer": "Research aid based on NASA microgravity experiments. Not a safety certification."
+  },
+  "POST /stowage/assess request": {
+    "scenario": {
+      "destination": "moon",
+      "cruise_days": 180,
+      "surface_days": 30
+    },
+    "spaces": [
+      {
+        "name": "Destiny Lab",
+        "type": "Lab",
+        "position": {
+          "x": 2,
+          "y": 1
+        },
+        "airflow_cm_s": 14,
+        "items": [
+          {
+            "name": "Acrylic panels",
+            "material_key": "PMMA",
+            "quantity": 2,
+            "dimensions_cm": {
+              "l": 30,
+              "w": 20,
+              "h": 0.4
+            }
+          },
+          {
+            "name": "Laptop",
+            "category": "machinery",
+            "ignition_source": true
+          },
+          {
+            "name": "Smoke detector",
+            "category": "safety"
+          },
+          {
+            "name": "Portable extinguisher",
+            "category": "safety"
+          }
+        ]
+      },
+      {
+        "name": "PMM Stowage",
+        "type": "Stowage",
+        "position": {
+          "x": 2,
+          "y": 0
+        },
+        "airflow_cm_s": 3,
+        "items": [
+          {
+            "name": "Cotton towels",
+            "material_key": "cotton fabric",
+            "flammability": "High",
+            "quantity": 10,
+            "dimensions_cm": {
+              "l": 50,
+              "w": 30,
+              "h": 1
+            }
+          },
+          {
+            "name": "Polyurethane foam",
+            "flammability": "High",
+            "quantity": 2,
+            "dimensions_cm": {
+              "l": 40,
+              "w": 40,
+              "h": 5
+            }
+          }
+        ]
+      },
+      {
+        "name": "Crew quarters",
+        "type": "Crew quarters",
+        "position": {
+          "x": 3,
+          "y": 1
+        },
+        "airflow_cm_s": 8,
+        "items": [
+          {
+            "name": "Nomex-bagged clothing",
+            "material_key": "Nomex",
+            "quantity": 4,
+            "dimensions_cm": {
+              "l": 30,
+              "w": 20,
+              "h": 10
+            }
+          }
+        ]
+      },
+      {
+        "name": "Node 1",
+        "kind": "passage",
+        "position": {
+          "x": 1,
+          "y": 1
+        },
+        "airflow_cm_s": 10,
+        "items": []
+      }
+    ]
+  },
+  "POST /stowage/assess response (template text)": {
+    "overall": {
+      "score": 66.5,
+      "level": "High"
+    },
+    "phases": {
+      "cruise": {
+        "score": 56.8,
+        "level": "Elevated",
+        "summary": "Ship scores 56.8 (Elevated) during cruise. Riskiest space: PMM Stowage (67.3)."
+      },
+      "surface": {
+        "score": 71.6,
+        "level": "High",
+        "summary": "Ship scores 71.6 (High) during surface. Riskiest space: PMM Stowage (78.6)."
+      }
+    },
+    "rooms": [
+      {
+        "name": "Destiny Lab",
+        "stocked": true,
+        "phases": {
+          "cruise": {
+            "score": 33.0,
+            "level": "Guarded",
+            "factors": {
+              "material": 46.8,
+              "fuel": 14.3,
+              "sources": 57.0,
+              "airflow": 20.0,
+              "thickness": 85.0
+            },
+            "items": [
+              {
+                "name": "Acrylic panels",
+                "material_key": "PMMA",
+                "hazard": 46.8,
+                "evidence": "strong",
+                "basis": "burned from 21.9%, went out at 20.9% or below"
+              }
+            ],
+            "gaps": []
+          },
+          "surface": {
+            "score": 57.1,
+            "level": "Elevated",
+            "factors": {
+              "material": 95.0,
+              "fuel": 26.4,
+              "sources": 57.0,
+              "airflow": 20.0,
+              "thickness": 85.0
+            },
+            "items": [
+              {
+                "name": "Acrylic panels",
+                "material_key": "PMMA",
+                "hazard": 95.0,
+                "evidence": "limited",
+                "basis": "burned from 21.9%, went out at 20.9% or below"
+              }
+            ],
+            "gaps": [
+              "Acrylic panels: no tests within 3% of 34% oxygen",
+              "No partial-gravity combustion data yet; scores use microgravity tests."
+            ]
+          }
+        },
+        "rationale": "Main drivers: material (95), thickness (85)."
+      },
+      {
+        "name": "PMM Stowage",
+        "stocked": true,
+        "phases": {
+          "cruise": {
+            "score": 67.3,
+            "level": "High",
+            "factors": {
+              "material": 70.0,
+              "fuel": 100.0,
+              "sources": 35.0,
+              "airflow": 51.0,
+              "thickness": 55.0
+            },
+            "items": [
+              {
+                "name": "Cotton towels",
+                "material_key": "cotton fabric",
+                "hazard": 70.0,
+                "evidence": "none",
+                "basis": "no NASA test data; estimate from the item's flammability level"
+              },
+              {
+                "name": "Polyurethane foam",
+                "material_key": null,
+                "hazard": 70.0,
+                "evidence": "none",
+                "basis": "no NASA test data; estimate from the item's flammability level"
+              }
+            ],
+            "gaps": [
+              "Cotton towels: no NASA test data; score is an estimate",
+              "Polyurethane foam: no NASA test data; score is an estimate"
+            ]
+          },
+          "surface": {
+            "score": 78.6,
+            "level": "High",
+            "factors": {
+              "material": 95.0,
+              "fuel": 100.0,
+              "sources": 35.0,
+              "airflow": 51.0,
+              "thickness": 55.0
+            },
+            "items": [
+              {
+                "name": "Cotton towels",
+                "material_key": "cotton fabric",
+                "hazard": 95.0,
+                "evidence": "none",
+                "basis": "no NASA test data; estimate from the item's flammability level"
+              },
+              {
+                "name": "Polyurethane foam",
+                "material_key": null,
+                "hazard": 95.0,
+                "evidence": "none",
+                "basis": "no NASA test data; estimate from the item's flammability level"
+              }
+            ],
+            "gaps": [
+              "Cotton towels: no NASA test data; score is an estimate",
+              "Polyurethane foam: no NASA test data; score is an estimate",
+              "No partial-gravity combustion data yet; scores use microgravity tests."
+            ]
+          }
+        },
+        "rationale": "Main drivers: fuel (100), material (95)."
+      },
+      {
+        "name": "Crew quarters",
+        "stocked": true,
+        "phases": {
+          "cruise": {
+            "score": 22.7,
+            "level": "Guarded",
+            "factors": {
+              "material": 33.2,
+              "fuel": 28.6,
+              "sources": 0.0,
+              "airflow": 20.0,
+              "thickness": 0.0
+            },
+            "items": [
+              {
+                "name": "Nomex-bagged clothing",
+                "material_key": "Nomex",
+                "hazard": 33.2,
+                "evidence": "limited",
+                "basis": "never burned in tests up to 22.1%"
+              }
+            ],
+            "gaps": []
+          },
+          "surface": {
+            "score": 47.7,
+            "level": "Elevated",
+            "factors": {
+              "material": 60.0,
+              "fuel": 57.1,
+              "sources": 35.0,
+              "airflow": 20.0,
+              "thickness": 20.0
+            },
+            "items": [
+              {
+                "name": "Nomex-bagged clothing",
+                "material_key": "Nomex",
+                "hazard": 60.0,
+                "evidence": "limited",
+                "basis": "never burned in tests up to 22.1%"
+              }
+            ],
+            "gaps": [
+              "Nomex-bagged clothing: never tested above 22.1% oxygen",
+              "No partial-gravity combustion data yet; scores use microgravity tests."
+            ]
+          }
+        },
+        "rationale": "Main drivers: material (60), fuel (57.1)."
+      },
+      {
+        "name": "Node 1",
+        "stocked": false,
+        "phases": {
+          "cruise": {
+            "score": 0.0,
+            "level": "Low",
+            "factors": {},
+            "items": [],
+            "gaps": []
+          },
+          "surface": {
+            "score": 0.0,
+            "level": "Low",
+            "factors": {},
+            "items": [],
+            "gaps": []
+          }
+        },
+        "rationale": ""
+      }
+    ],
+    "actions": [
+      {
+        "severity": "high",
+        "room": "PMM Stowage",
+        "title": "Review flammable items in PMM Stowage (highest hazard: Cotton towels): bag, move or swap them"
+      },
+      {
+        "severity": "medium",
+        "room": "Destiny Lab",
+        "title": "Review flammable items in Destiny Lab (highest hazard: Acrylic panels): bag, move or swap them"
+      },
+      {
+        "severity": "medium",
+        "room": "Crew quarters",
+        "title": "Review flammable items in Crew quarters (highest hazard: Nomex-bagged clothing): bag, move or swap them"
+      }
+    ],
+    "hazards": [],
+    "data_gaps": [
+      "Cotton towels: no NASA test data; score is an estimate",
+      "Polyurethane foam: no NASA test data; score is an estimate",
+      "Acrylic panels: no tests within 3% of 34% oxygen",
+      "No partial-gravity combustion data yet; scores use microgravity tests.",
+      "Nomex-bagged clothing: never tested above 22.1% oxygen"
+    ],
+    "text_source": "template",
+    "disclaimer": "Planning aid based on NASA microgravity experiments. Not a safety certification."
+  },
+  "GET /health": {
+    "status": "ok",
+    "experiments": 339
+  },
+  "error (400/404/502)": {
+    "detail": "Unknown material 'wood'. See /materials."
+  }
+}
