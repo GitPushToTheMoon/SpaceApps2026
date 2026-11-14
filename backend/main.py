@@ -112,7 +112,7 @@ def _assess_cached(oxygen: float, pressure: float, airflow: float,
         "oxygen_pct": oxygen, "pressure_psi": pressure, "airflow_cm_s": airflow,
         "material": material or "any", "gravity_g": gravity,
     }
-    result = ai.assess(conditions, [m.model_dump(exclude={"analysis"}) for m in matches])
+    result = ai.assess(conditions, [m.model_dump(exclude={"analysis"}) for m in matches], code_gaps)
 
     # ---- never trust the AI's output blindly
     risk = str(result.get("risk_level", "")).strip().lower()
@@ -125,9 +125,15 @@ def _assess_cached(oxygen: float, pressure: float, airflow: float,
         if isinstance(e, dict) and e.get("id") in valid_ids and e.get("what_happened"):
             evidence.append(Evidence(id=e["id"], what_happened=str(e["what_happened"])))
 
-    gaps: List[str] = []
-    for g in code_gaps + [str(x) for x in (result.get("data_gaps") or [])]:
-        if g and g not in gaps:
+    # code gaps first; AI gaps only if they add something (skip repeats of gravity/oxygen/pressure facts)
+    gaps: List[str] = list(code_gaps)
+    covered = " ".join(code_gaps).lower()
+    for g in [str(x).strip() for x in (result.get("data_gaps") or [])]:
+        low = g.lower()
+        repeats = (("gravity" in low and "gravity" in covered)
+                   or ("oxygen" in low and "oxygen" in covered and "%" in low)
+                   or ("pressure" in low and "pressure" in covered and "report" in low))
+        if g and not repeats and g not in gaps:
             gaps.append(g)
 
     return AssessResponse(

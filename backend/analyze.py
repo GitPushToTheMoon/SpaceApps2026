@@ -26,6 +26,19 @@ ALLOWED_ENVIRONMENTS = {
 ALLOWED_CATEGORIES = {"prevention", "detection", "suppression", "other"}
 PAUSE_S = float(os.environ.get("ANALYZE_PAUSE_S", "1.0"))  # between calls, for rate limits
 
+# Habitat rule (applied in code, not by the AI, so it's consistent):
+# planned Moon/Mars habitats and rovers use higher oxygen and lower pressure.
+HABITAT_ENVIRONMENTS = ["lunar base", "mars base", "pressurized rover"]
+HABITAT_MIN_OXYGEN_PCT = 25.0
+HABITAT_MAX_PRESSURE_PSI = 12.0
+
+
+def habitat_relevant(row: dict) -> bool:
+    oxygen = [v for v in (row.get("oxygen_pct_min"), row.get("oxygen_pct_max")) if v is not None]
+    pressure = [v for v in (row.get("pressure_psi_min"), row.get("pressure_psi_max")) if v is not None]
+    return (bool(oxygen) and max(oxygen) >= HABITAT_MIN_OXYGEN_PCT) or \
+           (bool(pressure) and min(pressure) < HABITAT_MAX_PRESSURE_PSI)
+
 
 def load_verified() -> pd.DataFrame:
     df = pd.read_csv(EXPERIMENTS_CSV, dtype={"id": str})
@@ -50,14 +63,22 @@ def clean_row(row: pd.Series) -> dict:
     return {k: (None if isinstance(v, float) and math.isnan(v) else v) for k, v in row.items()}
 
 
-def tidy(raw: dict) -> dict:
+def apply_environment_rules(envs: list, row: dict) -> list:
+    """spacecraft + space station always; Moon/Mars/rover exactly when the habitat rule says so;
+    keep the AI's choice only for 'earth'."""
+    out = ["spacecraft", "space station"]
+    if habitat_relevant(row):
+        out += HABITAT_ENVIRONMENTS
+    if "earth" in (envs or []):
+        out.append("earth")
+    return out
+
+
+def tidy(raw: dict, row: dict) -> dict:
     """Keep only allowed values and check the shape against schemas.Analysis."""
     raw = dict(raw)
     envs = [e for e in raw.get("environments") or [] if e in ALLOWED_ENVIRONMENTS]
-    for always in ("spacecraft", "space station"):  # every test is microgravity
-        if always not in envs:
-            envs.insert(0, always)
-    raw["environments"] = list(dict.fromkeys(envs))
+    raw["environments"] = apply_environment_rules(envs, row)
     if raw.get("category") not in ALLOWED_CATEGORIES:
         raw["category"] = "other"
     score = raw.get("fire_safety_relevance")
@@ -72,10 +93,25 @@ def main() -> None:
     parser.add_argument("--redo", action="store_true", help="re-analyze experiments already done")
     parser.add_argument("--limit", type=int, help="only analyze this many (for testing)")
     parser.add_argument("--ids", nargs="+", help="only analyze these experiment ids")
+    parser.add_argument("--fix-environments", action="store_true",
+                        help="re-apply the environment rules to existing results (no AI calls)")
     args = parser.parse_args()
 
     df = load_verified()
     results = load_existing()
+
+    if args.fix_environments:
+        rows = {r["id"]: clean_row(r) for _, r in df.iterrows()}
+        changed = 0
+        for exp_id, entry in results.items():
+            if exp_id in rows:
+                new = apply_environment_rules(entry.get("environments"), rows[exp_id])
+                if new != entry.get("environments"):
+                    entry["environments"] = new
+                    changed += 1
+        save(results)
+        print(f"Environment rules applied: {changed} of {len(results)} entries updated.")
+        return
 
     todo = df
     if args.ids:
@@ -94,7 +130,8 @@ def main() -> None:
         for i, (_, row) in enumerate(todo.iterrows(), 1):
             exp_id = row["id"]
             try:
-                results[exp_id] = tidy(ai.analyze_experiment(clean_row(row)))
+                row_dict = clean_row(row)
+                results[exp_id] = tidy(ai.analyze_experiment(row_dict), row_dict)
                 save(results)
                 done += 1
                 print(f"[{i}/{len(todo)}] {exp_id}  relevance={results[exp_id]['fire_safety_relevance']}")

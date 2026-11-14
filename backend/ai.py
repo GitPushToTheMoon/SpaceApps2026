@@ -156,25 +156,39 @@ conditions. Below are the closest NASA microgravity combustion experiments
 
 Rules:
 - Base everything ONLY on these experiments. Cite them by id, e.g. (PSI-69-019).
-- Do not invent numbers or outcomes. If the experiments don't cover the user's
-  conditions (oxygen, pressure, airflow or material), say so and use
-  risk_level "insufficient data".
-- Higher oxygen generally increases flammability; only claim this for the user's
-  conditions if the cited experiments support it.
+- Compare numbers directly: state the user's oxygen, pressure and airflow next to
+  the tested values (e.g. "tested at 22% oxygen; you asked about 34%").
+- NEVER say the user's conditions fall within the tested range unless match_distance
+  is 0 for that experiment. The facts below were computed by code and are correct;
+  do not contradict them.
+- Describe outcomes exactly as the data states them. "Burned for 600 s" or
+  "burned ~10 cm" is not "completely consumed"; only say complete/consumed if the
+  outcome says so.
+- If the user's conditions are outside what was tested, say what the closest
+  evidence suggests (e.g. "it already burned at lower oxygen") and that higher
+  oxygen generally increases flammability, but that this exact case is untested.
+- risk_level guide: "high" if the closest relevant tests burned/spread at the same
+  or less severe conditions; "elevated" if they burned at milder conditions but the
+  user's case is untested or mixed; "low" only if tests at the same or harsher
+  conditions self-extinguished or did not ignite; "insufficient data" if there is no
+  relevant evidence for the material or conditions.
 - {gravity_note}
 - This is a research aid, not a safety certification.
 
 User conditions:
 {conditions}
 
+Facts already computed by code (shown to the user separately; do not repeat them in data_gaps):
+{known_gaps}
+
 Matching experiments (closest first; match_distance 0 = conditions fall inside that test's ranges):
 {experiments}
 
 Return JSON with exactly these keys:
 - "risk_level": one of ["low", "elevated", "high", "insufficient data"]
-- "explanation": 3-5 plain-English sentences citing experiment ids
-- "evidence": list of {{"id": "<experiment id>", "what_happened": "<one sentence>"}}
-- "data_gaps": list of short strings describing what the data does not cover
+- "explanation": 3-5 plain-English sentences citing experiment ids and comparing numbers
+- "evidence": list of {{"id": "<experiment id>", "what_happened": "<one sentence, as stated in the data>"}}
+- "data_gaps": list of ADDITIONAL short gaps not already in the facts above (can be empty)
 """
 
 # Fields the AI sees. source_quote / verified stay internal.
@@ -201,13 +215,15 @@ def analyze_experiment(row: Dict) -> dict:
     return ask_json(ANALYZE_PROMPT.format(row=json.dumps(_clean(row), indent=2, default=str)))
 
 
-def assess(conditions: Dict, matched_experiments: List[Dict]) -> dict:
-    """Used by POST /assess: user conditions + matched experiments -> risk JSON."""
+def assess(conditions: Dict, matched_experiments: List[Dict],
+           known_gaps: Optional[List[str]] = None) -> dict:
+    """Used by POST /assess: user conditions + matched experiments -> risk JSON.
+    known_gaps: data gaps computed by matching.coverage_gaps (treated as facts)."""
     gravity = float(conditions.get("gravity_g") or 0)
     if gravity > 0:
         gravity_note = (
             f"The user's habitat has {gravity} g gravity. All experiments are microgravity; "
-            "there is no partial-gravity combustion data yet. Say so in data_gaps."
+            "there is no partial-gravity combustion data yet (already listed in the facts)."
         )
     else:
         gravity_note = "The user's habitat is in microgravity, like the experiments."
@@ -215,6 +231,7 @@ def assess(conditions: Dict, matched_experiments: List[Dict]) -> dict:
     prompt = RISK_PROMPT.format(
         gravity_note=gravity_note,
         conditions=json.dumps(conditions, indent=2),
+        known_gaps="\n".join(f"- {g}" for g in (known_gaps or [])) or "- (none)",
         experiments=json.dumps([_clean(e) for e in matched_experiments], indent=2, default=str),
     )
     return ask_json(prompt)

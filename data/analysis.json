@@ -1170,6 +1170,7 @@
       "spacecraft",
       "space station",
       "lunar base",
+      "mars base",
       "pressurized rover"
     ],
     "category": "suppression",
@@ -1476,6 +1477,7 @@
       "spacecraft",
       "space station",
       "lunar base",
+      "mars base",
       "pressurized rover"
     ],
     "category": "suppression",
@@ -1492,6 +1494,8 @@
     "environments": [
       "spacecraft",
       "space station",
+      "lunar base",
+      "mars base",
       "pressurized rover"
     ],
     "category": "other",
@@ -1509,6 +1513,7 @@
       "spacecraft",
       "space station",
       "lunar base",
+      "mars base",
       "pressurized rover"
     ],
     "category": "prevention",
@@ -1525,6 +1530,8 @@
     "environments": [
       "spacecraft",
       "space station",
+      "lunar base",
+      "mars base",
       "pressurized rover"
     ],
     "category": "suppression",
@@ -2013,7 +2020,8 @@
       "spacecraft",
       "space station",
       "lunar base",
-      "mars base"
+      "mars base",
+      "pressurized rover"
     ],
     "category": "other",
     "key_findings": [
@@ -2101,6 +2109,8 @@
     "environments": [
       "spacecraft",
       "space station",
+      "lunar base",
+      "mars base",
       "pressurized rover"
     ],
     "category": "suppression",
@@ -2118,6 +2128,7 @@
       "spacecraft",
       "space station",
       "lunar base",
+      "mars base",
       "pressurized rover"
     ],
     "category": "suppression",
@@ -2152,6 +2163,8 @@
     "environments": [
       "spacecraft",
       "space station",
+      "lunar base",
+      "mars base",
       "pressurized rover"
     ],
     "category": "prevention",
@@ -2168,6 +2181,8 @@
     "environments": [
       "spacecraft",
       "space station",
+      "lunar base",
+      "mars base",
       "pressurized rover"
     ],
     "category": "suppression",
@@ -2185,6 +2200,7 @@
       "spacecraft",
       "space station",
       "lunar base",
+      "mars base",
       "pressurized rover"
     ],
     "category": "suppression",
@@ -2219,6 +2235,8 @@
     "environments": [
       "spacecraft",
       "space station",
+      "lunar base",
+      "mars base",
       "pressurized rover"
     ],
     "category": "suppression",
@@ -2234,7 +2252,10 @@
     "relevance_reason": "This is useful related evidence concerning liquid fuel extinction and flammability limits in microgravity.",
     "environments": [
       "spacecraft",
-      "space station"
+      "space station",
+      "lunar base",
+      "mars base",
+      "pressurized rover"
     ],
     "category": "suppression",
     "key_findings": [
@@ -2250,6 +2271,8 @@
     "environments": [
       "spacecraft",
       "space station",
+      "lunar base",
+      "mars base",
       "pressurized rover"
     ],
     "category": "suppression",
@@ -2265,7 +2288,10 @@
     "relevance_reason": "This is a liquid fuel extinction test providing useful evidence regarding flammability limits and flame extinguishment.",
     "environments": [
       "spacecraft",
-      "space station"
+      "space station",
+      "lunar base",
+      "mars base",
+      "pressurized rover"
     ],
     "category": "suppression",
     "key_findings": [
@@ -2280,7 +2306,10 @@
     "relevance_reason": "This is a liquid fuel test at slightly elevated oxygen, providing useful related evidence about droplet combustion and extinction limits.",
     "environments": [
       "spacecraft",
-      "space station"
+      "space station",
+      "lunar base",
+      "mars base",
+      "pressurized rover"
     ],
     "category": "other",
     "key_findings": [
@@ -2295,7 +2324,10 @@
     "relevance_reason": "It provides useful related evidence on liquid fuel combustion and extinction limits at a slightly elevated oxygen level relevant to spacecraft fire safety.",
     "environments": [
       "spacecraft",
-      "space station"
+      "space station",
+      "lunar base",
+      "mars base",
+      "pressurized rover"
     ],
     "category": "other",
     "key_findings": [
@@ -2311,6 +2343,8 @@
     "environments": [
       "spacecraft",
       "space station",
+      "lunar base",
+      "mars base",
       "pressurized rover"
     ],
     "category": "other",
@@ -2327,6 +2361,8 @@
     "environments": [
       "spacecraft",
       "space station",
+      "lunar base",
+      "mars base",
       "pressurized rover"
     ],
     "category": "prevention",
@@ -2343,6 +2379,8 @@
     "environments": [
       "spacecraft",
       "space station",
+      "lunar base",
+      "mars base",
       "pressurized rover"
     ],
     "category": "suppression",
@@ -2359,6 +2397,8 @@
     "environments": [
       "spacecraft",
       "space station",
+      "lunar base",
+      "mars base",
       "pressurized rover"
     ],
     "category": "suppression",
@@ -2374,7 +2414,10 @@
     "relevance_reason": "It provides useful related evidence on liquid fuel flammability and extinction limits with a clear finding on droplet burn time and extinction diameter.",
     "environments": [
       "spacecraft",
-      "space station"
+      "space station",
+      "lunar base",
+      "mars base",
+      "pressurized rover"
     ],
     "category": "suppression",
     "key_findings": [
@@ -2390,6 +2433,8 @@
     "environments": [
       "spacecraft",
       "space station",
+      "lunar base",
+      "mars base",
       "pressurized rover"
     ],
     "category": "suppression",
@@ -2406,7 +2451,9 @@
     "environments": [
       "spacecraft",
       "space station",
-      "mars base"
+      "lunar base",
+      "mars base",
+      "pressurized rover"
     ],
     "category": "suppression",
     "key_findings": [
@@ -2436,7 +2483,10 @@
     "relevance_reason": "The experiment provides useful related evidence involving liquid fuel extinction with carbon dioxide added as a diluent.",
     "environments": [
       "spacecraft",
-      "space station"
+      "space station",
+      "lunar base",
+      "mars base",
+      "pressurized rover"
     ],
     "category": "suppression",
     "key_findings": [
@@ -2453,6 +2503,7 @@
       "spacecraft",
       "space station",
       "lunar base",
+      "mars base",
       "pressurized rover"
     ],
     "category": "suppression",
@@ -2468,7 +2519,10 @@
     "relevance_reason": "The experiment provides useful related evidence on liquid fuel extinction and flammability limits under specific gas concentrations including carbon dioxide.",
     "environments": [
       "spacecraft",
-      "space station"
+      "space station",
+      "lunar base",
+      "mars base",
+      "pressurized rover"
     ],
     "category": "suppression",
     "key_findings": [
@@ -2484,6 +2538,8 @@
     "environments": [
       "spacecraft",
       "space station",
+      "lunar base",
+      "mars base",
       "pressurized rover"
     ],
     "category": "suppression",
@@ -2500,6 +2556,8 @@
     "environments": [
       "spacecraft",
       "space station",
+      "lunar base",
+      "mars base",
       "pressurized rover"
     ],
     "category": "suppression",
@@ -2516,6 +2574,8 @@
     "environments": [
       "spacecraft",
       "space station",
+      "lunar base",
+      "mars base",
       "pressurized rover"
     ],
     "category": "suppression",
@@ -2533,6 +2593,7 @@
       "spacecraft",
       "space station",
       "lunar base",
+      "mars base",
       "pressurized rover"
     ],
     "category": "suppression",
@@ -2549,6 +2610,7 @@
     "environments": [
       "spacecraft",
       "space station",
+      "lunar base",
       "mars base",
       "pressurized rover"
     ],
@@ -2567,6 +2629,7 @@
       "spacecraft",
       "space station",
       "lunar base",
+      "mars base",
       "pressurized rover"
     ],
     "category": "suppression",
@@ -2584,6 +2647,7 @@
       "spacecraft",
       "space station",
       "lunar base",
+      "mars base",
       "pressurized rover"
     ],
     "category": "suppression",
@@ -2599,7 +2663,10 @@
     "relevance_reason": "Provides useful related evidence on liquid fuels and flame extinction limits under low-oxygen and carbon dioxide-diluted conditions.",
     "environments": [
       "spacecraft",
-      "space station"
+      "space station",
+      "lunar base",
+      "mars base",
+      "pressurized rover"
     ],
     "category": "suppression",
     "key_findings": [
@@ -2650,7 +2717,10 @@
     "relevance_reason": "It provides useful related evidence on liquid fuels with a clear finding about extinction at lower oxygen and added CO2.",
     "environments": [
       "spacecraft",
-      "space station"
+      "space station",
+      "lunar base",
+      "mars base",
+      "pressurized rover"
     ],
     "category": "suppression",
     "key_findings": [
@@ -2665,7 +2735,10 @@
     "relevance_reason": "This is a liquid fuel extinction test providing useful evidence on flammability limits and extinction at lower oxygen concentrations.",
     "environments": [
       "spacecraft",
-      "space station"
+      "space station",
+      "lunar base",
+      "mars base",
+      "pressurized rover"
     ],
     "category": "suppression",
     "key_findings": [
@@ -2682,6 +2755,7 @@
       "spacecraft",
       "space station",
       "lunar base",
+      "mars base",
       "pressurized rover"
     ],
     "category": "suppression",
@@ -2805,10 +2879,7 @@
     "relevance_reason": "This is a liquid fuel test involving droplet combustion and behavior under elevated oxygen conditions, providing useful related evidence for flammability and combustion dynamics.",
     "environments": [
       "spacecraft",
-      "space station",
-      "lunar base",
-      "mars base",
-      "pressurized rover"
+      "space station"
     ],
     "category": "other",
     "key_findings": [
@@ -2823,10 +2894,7 @@
     "relevance_reason": "It provides useful related evidence on liquid fuel combustion and behavior in a spacecraft environment.",
     "environments": [
       "spacecraft",
-      "space station",
-      "lunar base",
-      "mars base",
-      "pressurized rover"
+      "space station"
     ],
     "category": "other",
     "key_findings": [
@@ -2842,7 +2910,9 @@
     "environments": [
       "spacecraft",
       "space station",
-      "lunar base"
+      "lunar base",
+      "mars base",
+      "pressurized rover"
     ],
     "category": "suppression",
     "key_findings": [
@@ -2858,6 +2928,8 @@
     "environments": [
       "spacecraft",
       "space station",
+      "lunar base",
+      "mars base",
       "pressurized rover"
     ],
     "category": "suppression",
@@ -2874,6 +2946,8 @@
     "environments": [
       "spacecraft",
       "space station",
+      "lunar base",
+      "mars base",
       "pressurized rover"
     ],
     "category": "suppression",
@@ -2889,7 +2963,10 @@
     "relevance_reason": "This is a liquid fuel extinction test at lower oxygen and with added carbon dioxide, providing useful related evidence about flammability limits and flame extinguishment.",
     "environments": [
       "spacecraft",
-      "space station"
+      "space station",
+      "lunar base",
+      "mars base",
+      "pressurized rover"
     ],
     "category": "suppression",
     "key_findings": [
@@ -2950,6 +3027,8 @@
     "environments": [
       "spacecraft",
       "space station",
+      "lunar base",
+      "mars base",
       "pressurized rover"
     ],
     "category": "suppression",
@@ -3365,6 +3444,8 @@
     "environments": [
       "spacecraft",
       "space station",
+      "lunar base",
+      "mars base",
       "pressurized rover"
     ],
     "category": "other",
@@ -3381,6 +3462,7 @@
     "environments": [
       "spacecraft",
       "space station",
+      "lunar base",
       "mars base",
       "pressurized rover"
     ],
@@ -3434,6 +3516,8 @@
     "environments": [
       "spacecraft",
       "space station",
+      "lunar base",
+      "mars base",
       "pressurized rover"
     ],
     "category": "suppression",
@@ -3450,6 +3534,8 @@
     "environments": [
       "spacecraft",
       "space station",
+      "lunar base",
+      "mars base",
       "pressurized rover"
     ],
     "category": "other",
@@ -3530,6 +3616,8 @@
     "environments": [
       "spacecraft",
       "space station",
+      "lunar base",
+      "mars base",
       "pressurized rover"
     ],
     "category": "suppression",
@@ -3564,6 +3652,8 @@
     "environments": [
       "spacecraft",
       "space station",
+      "lunar base",
+      "mars base",
       "pressurized rover"
     ],
     "category": "suppression",
@@ -4604,6 +4694,7 @@
       "spacecraft",
       "space station",
       "lunar base",
+      "mars base",
       "pressurized rover"
     ],
     "category": "suppression",
@@ -4620,6 +4711,8 @@
     "environments": [
       "spacecraft",
       "space station",
+      "lunar base",
+      "mars base",
       "pressurized rover"
     ],
     "category": "other",
@@ -4636,6 +4729,8 @@
     "environments": [
       "spacecraft",
       "space station",
+      "lunar base",
+      "mars base",
       "pressurized rover"
     ],
     "category": "suppression",
@@ -4652,6 +4747,8 @@
     "environments": [
       "spacecraft",
       "space station",
+      "lunar base",
+      "mars base",
       "pressurized rover"
     ],
     "category": "suppression",
@@ -4668,6 +4765,8 @@
     "environments": [
       "spacecraft",
       "space station",
+      "lunar base",
+      "mars base",
       "pressurized rover"
     ],
     "category": "suppression",
@@ -4684,7 +4783,9 @@
     "environments": [
       "spacecraft",
       "space station",
-      "lunar base"
+      "lunar base",
+      "mars base",
+      "pressurized rover"
     ],
     "category": "suppression",
     "key_findings": [
@@ -4700,6 +4801,8 @@
     "environments": [
       "spacecraft",
       "space station",
+      "lunar base",
+      "mars base",
       "pressurized rover"
     ],
     "category": "suppression",
@@ -4716,6 +4819,8 @@
     "environments": [
       "spacecraft",
       "space station",
+      "lunar base",
+      "mars base",
       "pressurized rover"
     ],
     "category": "suppression",
@@ -4732,6 +4837,8 @@
     "environments": [
       "spacecraft",
       "space station",
+      "lunar base",
+      "mars base",
       "pressurized rover"
     ],
     "category": "suppression",
@@ -4748,6 +4855,8 @@
     "environments": [
       "spacecraft",
       "space station",
+      "lunar base",
+      "mars base",
       "pressurized rover"
     ],
     "category": "suppression",
@@ -4764,6 +4873,8 @@
     "environments": [
       "spacecraft",
       "space station",
+      "lunar base",
+      "mars base",
       "pressurized rover"
     ],
     "category": "suppression",
@@ -4798,6 +4909,8 @@
     "environments": [
       "spacecraft",
       "space station",
+      "lunar base",
+      "mars base",
       "pressurized rover"
     ],
     "category": "suppression",
@@ -4814,6 +4927,8 @@
     "environments": [
       "spacecraft",
       "space station",
+      "lunar base",
+      "mars base",
       "pressurized rover"
     ],
     "category": "suppression",
@@ -4830,6 +4945,8 @@
     "environments": [
       "spacecraft",
       "space station",
+      "lunar base",
+      "mars base",
       "pressurized rover"
     ],
     "category": "suppression",
@@ -4846,6 +4963,8 @@
     "environments": [
       "spacecraft",
       "space station",
+      "lunar base",
+      "mars base",
       "pressurized rover"
     ],
     "category": "suppression",
@@ -4862,6 +4981,8 @@
     "environments": [
       "spacecraft",
       "space station",
+      "lunar base",
+      "mars base",
       "pressurized rover"
     ],
     "category": "suppression",
@@ -4877,7 +4998,10 @@
     "relevance_reason": "This is a liquid fuel combustion test at lower oxygen and with helium added, providing useful related evidence about flammability limits and extinction.",
     "environments": [
       "spacecraft",
-      "space station"
+      "space station",
+      "lunar base",
+      "mars base",
+      "pressurized rover"
     ],
     "category": "suppression",
     "key_findings": [
@@ -4893,6 +5017,8 @@
     "environments": [
       "spacecraft",
       "space station",
+      "lunar base",
+      "mars base",
       "pressurized rover"
     ],
     "category": "suppression",
@@ -4910,6 +5036,7 @@
       "spacecraft",
       "space station",
       "lunar base",
+      "mars base",
       "pressurized rover"
     ],
     "category": "suppression",
