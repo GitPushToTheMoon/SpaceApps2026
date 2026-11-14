@@ -129,3 +129,59 @@ Backend team only: re-reads the CSVs and `analysis.json` after data updates.
 - **Frontend never talks to Gemini directly.** The API key lives only in the backend.
 - **Changing a field name?** Update `backend/schemas.py` AND this file, and tell the other team.
 - Frontend can build against the example JSON above before the backend is deployed.
+
+
+## GET `/locations`
+Returns `data/locations.json`, currently **synthetic demo data**, not a mission layout.
+Each location has `id`, `module`, `crew_access` (0-5, higher means easier access),
+`pre_cleared`, `neighbors` (`name`, `hazard`) and `conditions` by phase.
+Replace the file or provide `locations` in the placement request with engineer-supplied data.
+
+## POST `/placement`
+Example request using demo locations:
+```json
+{
+  "item": {"name": "Panel", "materials": ["PMMA"], "notes": ""},
+  "current_location_id": "demo_cabin",
+  "destination": "lunar",
+  "pre_cleared_only": false
+}
+```
+Optional `locations` overrides the file. A location example:
+```json
+{
+  "id": "custom_locker",
+  "module": "Cabin",
+  "crew_access": 3,
+  "pre_cleared": false,
+  "neighbors": [{"name": "Battery", "hazard": "Potential ignition source"}],
+  "conditions": {
+    "pre_launch": {"oxygen_pct": 21, "pressure_psi": 14.7, "airflow_cm_s": 10, "gravity_g": 1},
+    "surface": {"oxygen_pct": 34, "pressure_psi": 8.2, "airflow_cm_s": 10, "gravity_g": 0.165}
+  }
+}
+```
+Missing or null phases return `insufficient data`; pre-launch gravity must be 1.
+Materials must come from `/materials`. Each material is matched and rated with the
+same rules as `/assess`. The phase rating is high if any material is high; otherwise
+unknown evidence propagates as insufficient data; otherwise the worse known rating wins.
+These are microgravity evidence screens: Earth pre-launch and surface gravity
+remain unvalidated, with explicit data gaps. Neighbor and module hazards are
+context for suggestions, not calculated risk modifiers.
+
+Response fields: `overall`, `summary`, `options`, `recommended`, `locations`,
+`evidence`, `data_gaps`, `disclaimer`. Each returned location includes
+`ratings.pre_launch` and `ratings.surface` with `risk` and `reason`.
+Ratings use `low / elevated / high / insufficient data` throughout.
+Options contain `type` (`move / separate / contain / swap_material`),
+`location_id` (only for moves), `action`, `why`. `recommended` indexes the
+**filtered returned options**, or is null when its original option was rejected.
+Moves exclude unknown or high phase ratings and must improve the overall screen
+(or be low in both phases), without worsening either phase. These criteria do
+not certify safety. `pre_cleared_only` restricts move candidates to pre-cleared locations.
+AI text is checked for unsupported numeric values; invalid options/gaps are dropped,
+and an invalid summary is replaced. This is a value check, not a guarantee that
+units, causal claims or mitigation effectiveness are correct. Engineering approval is required.
+If Gemini fails, ratings and evidence still return with empty options and an explicit gap.
+Errors: 400 unknown material/location, duplicate ids, or non-Earth pre-launch gravity;
+422 invalid request shape or out-of-range conditions. Never send API keys from the frontend.

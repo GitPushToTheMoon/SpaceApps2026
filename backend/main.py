@@ -181,3 +181,17 @@ def reload_data(x_admin_token: Optional[str] = Header(None)):
     data.reload()
     _assess_cached.cache_clear()
     return {"status": "reloaded", "experiments": data.experiment_count()}
+
+# Placement contract is separate from the existing assessment API.
+from . import placement
+from .schemas import PlacementRequest, PlacementResponse, PlacementLocation
+
+
+@app.get("/locations", response_model=List[PlacementLocation])
+def locations():
+    return placement.load_locations()
+
+
+@app.post("/placement", response_model=PlacementResponse)
+def placement_advice(req: PlacementRequest):
+    return placement.evaluate(req)
