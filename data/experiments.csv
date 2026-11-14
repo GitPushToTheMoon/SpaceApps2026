@@ -1,0 +1,2 @@
+id,name,investigation,fuel_type,material,oxygen_pct_min,oxygen_pct_max,pressure_psi_min,pressure_psi_max,airflow_cm_s_min,airflow_cm_s_max,gravity,outcome,description,source_url,source_quote,verified
+EXAMPLE-1,REPLACE WITH REAL TEST,BASS-II,solid,SIBAL fabric,21,21,14.7,14.7,0,20,microgravity,PLACEHOLDER - e.g. sustained flame spread / self-extinguished,PLACEHOLDER - describe the test in your own words,https://psi.nasa.gov/physci/repo/search?q=combustion,PLACEHOLDER - exact sentence from source,

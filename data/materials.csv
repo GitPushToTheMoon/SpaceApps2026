@@ -1,0 +1,13 @@
+material,display_name,fuel_type,description,investigations,priority
+SIBAL fabric,Cotton/fiberglass fabric (SIBAL),solid,75% cotton / 25% fiberglass cloth,"BASS, BASS-II, Saffire I, Saffire III, Saffire IV, Saffire VI",1
+cotton fabric,Cotton fabric (jersey),solid,Cotton jersey cloth,Saffire V,1
+PMMA,Acrylic plastic (PMMA),solid,"Polymethyl methacrylate sheets, rods and structured samples","BASS-II, Saffire II, Saffire IV, Saffire V, Saffire VI",1
+Nomex,Nomex fire-resistant fabric,solid,Fire-resistant fabric used in crew clothing,"BASS, Saffire II, Saffire V",1
+silicone,Silicone sheet,solid,Silicone sheet samples,Saffire II,1
+Ultem,Ultem plastic,solid,High-performance plastic,BASS,1
+wax-fiberglass,Wax-soaked fiberglass fabric,solid,Wax-saturated fiberglass fabric,BASS,1
+heptane,Heptane droplet,liquid,Liquid hydrocarbon fuel,"FLEX, FLEX-2, CFI",2
+methanol,Methanol droplet,liquid,Liquid alcohol fuel,FLEX,2
+heptane-isooctane,Heptane/isooctane droplet (gasoline stand-in),liquid,50/50 fuel mixture,FLEX-2,2
+ethylene,Ethylene gas,gas,Gaseous fuel (sooty flames),"ACME BRE, s-Flame, CLD Flame",3
+methane,Methane gas,gas,Gaseous fuel,"ACME BRE, s-Flame, CLD Flame",3
