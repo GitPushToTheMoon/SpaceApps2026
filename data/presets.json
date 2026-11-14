@@ -1,0 +1,48 @@
+[
+  {
+    "id": "iss_cabin",
+    "display_name": "ISS cabin",
+    "description": "Normal International Space Station atmosphere (sea-level-like air).",
+    "pressure_psi": {"default": 14.7, "min": 14.2, "max": 14.9},
+    "oxygen_pct": {"default": 21, "min": 21, "max": 21},
+    "airflow_cm_s": {"default": 10, "min": 5, "max": 20},
+    "temperature_c": {"default": 22, "min": 18, "max": 27},
+    "gravity_g": 0,
+    "sources": [
+      {"title": "Integrated Atmosphere Resource Recovery and Environmental Monitoring Technology Demonstration for Deep Space Exploration (Table 1)",
+       "url": "https://ntrs.nasa.gov/api/citations/20120015343/downloads/20120015343.pdf#page=2"}
+    ]
+  },
+  {
+    "id": "moon_habitat",
+    "display_name": "Moon habitat (exploration atmosphere)",
+    "description": "Lower pressure and higher oxygen so crews can suit up quickly for moonwalks.",
+    "pressure_psi": {"default": 8.2, "min": 8.2, "max": 8.2},
+    "oxygen_pct": {"default": 34, "min": 34, "max": 34},
+    "airflow_cm_s": {"default": 10, "min": 5, "max": 20},
+    "temperature_c": {"default": 22, "min": 18, "max": 27},
+    "gravity_g": 0.165,
+    "sources": [
+      {"title": "NASA Exploration EVA concept of operations for Artemis (vehicle atmosphere set points)",
+       "url": "https://www.nasa.gov/wp-content/uploads/2020/01/topic_1-_eva_lunar_surface_concept_of_operations.pdf"},
+      {"title": "NASA Moon Fact Sheet (gravity)",
+       "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/moonfact.html"}
+    ]
+  },
+  {
+    "id": "mars_habitat",
+    "display_name": "Mars habitat (exploration atmosphere)",
+    "description": "Same exploration atmosphere as the Moon habitat, under Mars gravity.",
+    "pressure_psi": {"default": 8.2, "min": 8.2, "max": 8.2},
+    "oxygen_pct": {"default": 34, "min": 34, "max": 34},
+    "airflow_cm_s": {"default": 10, "min": 5, "max": 20},
+    "temperature_c": {"default": 22, "min": 18, "max": 27},
+    "gravity_g": 0.38,
+    "sources": [
+      {"title": "NASA Exploration EVA concept of operations for Artemis (vehicle atmosphere set points)",
+       "url": "https://www.nasa.gov/wp-content/uploads/2020/01/topic_1-_eva_lunar_surface_concept_of_operations.pdf"},
+      {"title": "NASA Mars Fact Sheet (gravity)",
+       "url": "https://nssdc.gsfc.nasa.gov/planetary/factsheet/marsfact.html"}
+    ]
+  }
+]
