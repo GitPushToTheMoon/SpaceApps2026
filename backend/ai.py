@@ -8,6 +8,7 @@ Settings (.env):
   GOOGLE_CLOUD_PROJECT, GOOGLE_CLOUD_LOCATION, GOOGLE_APPLICATION_CREDENTIALS  (Vertex)
 """
 import json
+import re
 import os
 import time
 from typing import Dict, List, Optional

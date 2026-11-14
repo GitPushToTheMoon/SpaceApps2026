@@ -17,6 +17,8 @@ from .schemas import (AssessRequest, AssessResponse, Evidence, Experiment, Healt
                       Material, Preset, StowageAction, StowagePhase, StowageRequest,
                       StowageResponse, StowageRoom, StowageRoomPhase, StowageScore)
 
+from .planner_schemas import PlannerRequest, PlannerResponse
+
 app = FastAPI(
     title="Flame in Freefall API",
     description="Fire-safety insights from NASA microgravity combustion data (PSI).",
