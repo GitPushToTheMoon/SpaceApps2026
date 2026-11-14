@@ -12,7 +12,7 @@ from fastapi import FastAPI, Header, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 
-from . import ai, data, matching
+from . import ai, data, matching, risk
 from .schemas import (AssessRequest, AssessResponse, Evidence, Experiment, Health,
                       Material, Preset)
 
@@ -32,7 +32,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-RISK_LEVELS = {"low", "elevated", "high", "insufficient data"}
 ADMIN_TOKEN = os.environ.get("ADMIN_TOKEN")  # optional; set it when deployed
 
 
@@ -112,33 +111,43 @@ def _assess_cached(oxygen: float, pressure: float, airflow: float,
         "oxygen_pct": oxygen, "pressure_psi": pressure, "airflow_cm_s": airflow,
         "material": material or "any", "gravity_g": gravity,
     }
-    result = ai.assess(conditions, [m.model_dump(exclude={"analysis"}) for m in matches], code_gaps)
 
-    # ---- never trust the AI's output blindly
-    risk = str(result.get("risk_level", "")).strip().lower()
-    if risk not in RISK_LEVELS:
-        risk = "insufficient data"
+    # 1. Code decides the risk level and writes the evidence (never the AI)
+    risk_level, reason = risk.rule_risk(matches_df, oxygen, material, fuel_type)
+    rows = matches_df.to_dict("records")
+    evidence_pairs = [(r["id"], risk.evidence_sentence(r)) for r in rows]
+    evidence = [Evidence(id=i, what_happened=s) for i, s in evidence_pairs]
 
-    valid_ids = {m.id for m in matches}
-    evidence = []
-    for e in result.get("evidence") or []:
-        if isinstance(e, dict) and e.get("id") in valid_ids and e.get("what_happened"):
-            evidence.append(Evidence(id=e["id"], what_happened=str(e["what_happened"])))
+    # 2. AI writes the explanation; every number it uses must be a real value
+    allowed = risk.allowed_numbers(matches_df, conditions)
+    explanation, extra_gaps = None, []
+    for _ in range(2):  # one retry if it gets a number wrong
+        result = ai.assess(conditions, risk_level, reason,
+                           [f"({i}) {s}" for i, s in evidence_pairs], code_gaps)
+        text = str(result.get("explanation") or "").strip()
+        ok, bad = risk.numbers_ok(text, allowed)
+        if text and ok and "match distance" not in text.lower():
+            explanation = text
+            extra_gaps = [str(x).strip() for x in (result.get("data_gaps") or [])]
+            break
+        print(f"[assess] rejected AI explanation (bad numbers: {bad})")
+    if explanation is None:
+        explanation = risk.template_explanation(risk_level, reason, evidence_pairs)
 
-    # code gaps first; AI gaps only if they add something (skip repeats of gravity/oxygen/pressure facts)
+    # 3. Gaps: code facts first, AI extras only if new and number-checked
     gaps: List[str] = list(code_gaps)
     covered = " ".join(code_gaps).lower()
-    for g in [str(x).strip() for x in (result.get("data_gaps") or [])]:
+    for g in extra_gaps:
         low = g.lower()
         repeats = (("gravity" in low and "gravity" in covered)
                    or ("oxygen" in low and "oxygen" in covered and "%" in low)
                    or ("pressure" in low and "pressure" in covered and "report" in low))
-        if g and not repeats and g not in gaps:
+        if g and not repeats and g not in gaps and risk.numbers_ok(g, allowed)[0]:
             gaps.append(g)
 
     return AssessResponse(
-        risk_level=risk,
-        explanation=str(result.get("explanation") or "").strip(),
+        risk_level=risk_level,
+        explanation=explanation,
         evidence=evidence,
         data_gaps=gaps,
         matches=matches,

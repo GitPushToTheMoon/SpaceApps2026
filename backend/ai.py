@@ -150,45 +150,36 @@ Return JSON with exactly these keys:
 - "key_findings": up to 3 short findings, each stated in the data above.
 """
 
-RISK_PROMPT = """You are a fire-safety research assistant. A user describes habitat
-conditions. Below are the closest NASA microgravity combustion experiments
-(selected by code, not by you).
+RISK_PROMPT = """You are a fire-safety research assistant writing a short explanation
+for a user. The risk level and the evidence were already decided by code from
+NASA microgravity combustion data. Your job is ONLY to explain them in plain English.
 
 Rules:
-- Base everything ONLY on these experiments. Cite them by id, e.g. (PSI-69-019).
-- Compare numbers directly: state the user's oxygen, pressure and airflow next to
-  the tested values (e.g. "tested at 22% oxygen; you asked about 34%").
-- NEVER say the user's conditions fall within the tested range unless match_distance
-  is 0 for that experiment. The facts below were computed by code and are correct;
-  do not contradict them.
-- Describe outcomes exactly as the data states them. "Burned for 600 s" or
-  "burned ~10 cm" is not "completely consumed"; only say complete/consumed if the
-  outcome says so.
-- If the user's conditions are outside what was tested, say what the closest
-  evidence suggests (e.g. "it already burned at lower oxygen") and that higher
-  oxygen generally increases flammability, but that this exact case is untested.
-- risk_level guide: "high" if the closest relevant tests burned/spread at the same
-  or less severe conditions; "elevated" if they burned at milder conditions but the
-  user's case is untested or mixed; "low" only if tests at the same or harsher
-  conditions self-extinguished or did not ignite; "insufficient data" if there is no
-  relevant evidence for the material or conditions.
+- Use ONLY the numbers that appear in the facts below. Do not calculate, convert,
+  estimate or invent any number. If you mention a number, copy it exactly.
+- Cite experiments by id, e.g. (PSI-99-2-8).
+- Use the risk word "{risk_level}" and explain the reason given.
+- Say clearly that the user's exact conditions have not been tested if the gaps say so.
+- Higher oxygen generally increases flammability; you may say this in words.
 - {gravity_note}
+- Plain words only: no internal terms like "match distance".
 - This is a research aid, not a safety certification.
 
 User conditions:
 {conditions}
 
-Facts already computed by code (shown to the user separately; do not repeat them in data_gaps):
+Risk level (decided): {risk_level}
+Reason: {reason}
+
+Evidence (each line is exact, from the data):
+{evidence}
+
+Data gaps already shown to the user (do not repeat them):
 {known_gaps}
 
-Matching experiments (closest first; match_distance 0 = conditions fall inside that test's ranges):
-{experiments}
-
 Return JSON with exactly these keys:
-- "risk_level": one of ["low", "elevated", "high", "insufficient data"]
-- "explanation": 3-5 plain-English sentences citing experiment ids and comparing numbers
-- "evidence": list of {{"id": "<experiment id>", "what_happened": "<one sentence, as stated in the data>"}}
-- "data_gaps": list of ADDITIONAL short gaps not already in the facts above (can be empty)
+- "explanation": 3-4 plain-English sentences
+- "data_gaps": list of ADDITIONAL short gaps not already listed (usually empty)
 """
 
 # Fields the AI sees. source_quote / verified stay internal.
@@ -215,23 +206,23 @@ def analyze_experiment(row: Dict) -> dict:
     return ask_json(ANALYZE_PROMPT.format(row=json.dumps(_clean(row), indent=2, default=str)))
 
 
-def assess(conditions: Dict, matched_experiments: List[Dict],
-           known_gaps: Optional[List[str]] = None) -> dict:
-    """Used by POST /assess: user conditions + matched experiments -> risk JSON.
-    known_gaps: data gaps computed by matching.coverage_gaps (treated as facts)."""
+def assess(conditions: Dict, risk_level: str, reason: str,
+           evidence_lines: List[str], known_gaps: Optional[List[str]] = None) -> dict:
+    """Used by POST /assess: the code has already decided risk_level and evidence;
+    the AI only writes the explanation (main.py checks its numbers)."""
     gravity = float(conditions.get("gravity_g") or 0)
     if gravity > 0:
-        gravity_note = (
-            f"The user's habitat has {gravity} g gravity. All experiments are microgravity; "
-            "there is no partial-gravity combustion data yet (already listed in the facts)."
-        )
+        gravity_note = (f"The user's habitat has {gravity} g gravity, but all experiments are "
+                        "microgravity; there is no partial-gravity data (already listed in the gaps).")
     else:
         gravity_note = "The user's habitat is in microgravity, like the experiments."
 
     prompt = RISK_PROMPT.format(
         gravity_note=gravity_note,
         conditions=json.dumps(conditions, indent=2),
+        risk_level=risk_level,
+        reason=reason,
+        evidence="\n".join(f"- {line}" for line in evidence_lines) or "- (none)",
         known_gaps="\n".join(f"- {g}" for g in (known_gaps or [])) or "- (none)",
-        experiments=json.dumps([_clean(e) for e in matched_experiments], indent=2, default=str),
     )
     return ask_json(prompt)
