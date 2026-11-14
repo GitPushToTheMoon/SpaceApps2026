@@ -46,7 +46,7 @@ Habitat presets for buttons. Clicking one should fill the sliders with each `def
     "oxygen_pct":    { "default": 34,  "min": 34,  "max": 34 },
     "airflow_cm_s":  { "default": 10,  "min": 5,   "max": 20 },
     "temperature_c": { "default": 22,  "min": 18,  "max": 27 },
-    "gravity_g": 0.165,
+    "gravity_g": 0.166,
     "sources": [ { "title": "…", "url": "…" } ]
   }
 ]
@@ -118,7 +118,7 @@ Request:
   "pressure_psi": 10.2,
   "airflow_cm_s": 10,
   "material": "PMMA",
-  "gravity_g": 0.165,
+  "gravity_g": 0.166,
   "preset_id": "moon_habitat"
 }
 ```
@@ -153,62 +153,112 @@ Errors:
 
 ---
 
-## POST `/stowage/assess`
-Fire-risk score for a whole ship layout (Talia's Stowage Planner), for the cruise phase and,
-for Moon/Mars, the surface phase. **Scores, levels and room order come from code**
-(`backend/scoring.py`); Gemini only writes the summaries, room rationales, actions and
-hazards, and every number in that text is checked against the real scores. If the text
-fails the check twice, or Gemini is down, the endpoint still returns **200** with plain
-template text and `"text_source": "template"`.
+## Stowage Fire-Risk Planner: `GET /library`, `POST /api/assess`, `POST /api/chat`
+Backend for the planner in the handoff README. **Every score, level, factor, fix and move
+point comes from code** (`backend/scoring.py`, `backend/actions.py`). Gemini only writes the
+summary, room rationales, fix reasons and chat replies, and every number it writes is checked
+against the real values. Full request/response examples: `API_examples.json`.
 
-Request (only `spaces` is required; `scenario` has defaults):
+### GET `/library`
+The item list for the "Add to this space" dropdown (copied from the prototype's `BASE_LIB`):
+`key`, `name`, `category` (material / machinery / safety), `flammability` (Low / Moderate / High
+or null), `ignition_source`, `oxygen_source`, `swap` (lower-flammability key), `material_key`
+(links to the NASA test data; null = no tests), `test_dataset` (PSI items), `default_cm` (safety).
+
+### POST `/api/assess`
+Request = the prototype's `agentInput()` JSON, **plus each item's library `key`**:
 ```json
 {
-  "scenario": {
-    "destination": "moon",              // "cruise_only" | "moon" | "mars"
-    "cruise_days": 180, "surface_days": 30,
-    "cruise_atmosphere":  { "pressure_psi": 14.7, "oxygen_pct": 21 },
-    "surface_atmosphere": { "pressure_psi": 8.2,  "oxygen_pct": 34 },
-    "cruise_ventilation": "normal"      // "reduced" halves cruise airflow
+  "conditions": {
+    "cruise":  { "gravity_g": 0, "pressure_psia": 14.7, "o2_percent": 21, "ventilation": "normal", "cruise_days": 180 },
+    "surface": { "body": "Moon", "gravity_g": 0.166, "pressure_psia": 10.2, "o2_percent": 30,
+                 "stay_days": 30, "eva_prep_periods_high_o2": 4 }
   },
-  "spaces": [
-    { "name": "PMM Stowage", "type": "Stowage", "position": {"x": 2, "y": 0},
-      "airflow_cm_s": 3,
-      "items": [
-        { "name": "Cotton towels", "material_key": "cotton fabric", "flammability": "High",
-          "quantity": 10, "dimensions_cm": {"l": 50, "w": 30, "h": 1} },
-        { "name": "Laptop", "category": "machinery", "ignition_source": true },
-        { "name": "Smoke detector", "category": "safety" }
-      ] }
-  ]
+  "out_of_scope": ["launch"],
+  "spaces": [{
+    "id": "n3", "name": "Destiny Lab", "type": "Lab", "passage": false, "airflow_cm_s": 14,
+    "capacity_kg": 70, "neighbours": ["n2", "n4"],
+    "items": [{ "id": "n9", "key": "pmma", "name": "PMMA", "category": "material",
+                "flammability": "High", "ignition_source": false, "oxygen_source": false,
+                "qty": 3, "cm": [10, 8, 4] }]
+  }]
 }
 ```
-- `material_key` should be a `material` from `GET /materials`; unknown materials fall back
-  to the `flammability` hint (Low/Medium/High) and get `"evidence": "none"`.
-- `kind: "passage"` spaces (hatches, nodes) are only used for neighbour adjacency.
-- Grid neighbours (`position` differs by 1) share ignition sources.
+- `surface: null` = cruise only. `ventilation: "reduced"` halves every space's cruise airflow.
+- Extra fields (`baseline`, `swap_to`, `test_dataset`, `bagged`) are accepted and ignored or used.
+- Space ids must be unique; `cm` needs 3 numbers. Bad input returns **422**.
 
-Response (full example in `API_examples.json`):
+Response (phases are `cruise` and `surf`, as in the handoff):
 ```json
 {
-  "overall": { "score": 66.5, "level": "High" },
-  "phases": {
-    "cruise":  { "score": 56.8, "level": "Elevated", "summary": "…" },
-    "surface": { "score": 71.6, "level": "High",     "summary": "…" }
-  },
-  "rooms": [ { "name": "PMM Stowage", "stocked": true,
-               "phases": { "cruise": { "score": 67.3, "level": "High", "items": [ … ] }, … },
-               "rationale": "…" } ],
-  "actions": [ { "severity": "high", "room": "PMM Stowage", "title": "…" } ],
-  "hazards": [ "…" ],
-  "data_gaps": [ "…" ],
-  "text_source": "ai",                  // or "template"
+  "overall": { "score": 60.2, "level": "High", "driver": "surf", "summary": "two sentences" },
+  "phases":  { "cruise": { "score": 50.1, "level": "Elevated" }, "surf": { "score": 65.4, "level": "High" } },
+  "rooms": [{
+    "id": "n7", "name": "Quest Airlock", "stocked": true,
+    "cruise": 51.3, "surf": 62.5, "overall": 58.7,
+    "cruise_level": "Elevated", "surf_level": "High", "level": "Elevated",
+    "rationale": "≤ 18 words",
+    "fixes": [{ "title": "Swap Polyurethane foam for Melamine foam", "why": "≤ 14 words",
+                "points": 23.7, "ship_points": 1.4,
+                "action": { "type": "swap", "room_id": "n7", "item_id": "n6", "to": "melamine" } }],
+    "factors": { "cruise": { "material": 50.0, "fuel": 14.3, "sources": 67.0, "airflow": 20.0, "thickness": 35.0 }, "surf": { } },
+    "items": [{ "id": "n6", "name": "Polyurethane foam", "material_key": null,
+                "hazard": { "cruise": 70.0, "surf": 95.0 }, "evidence": "none", "basis": "…" }]
+  }],
+  "factors": [{ "key": "material", "name": "Material hazard (NASA test data)", "weight": 0.45,
+                "cruise": { "avg": 0, "min": 0, "max": 0 }, "surf": { "avg": 0, "min": 0, "max": 0 } }],
+  "moves": [{ "item_id": "n6", "item": "Polyurethane foam", "qty": 1, "from_id": "n7", "from_name": "Quest Airlock",
+              "to_id": "n2", "to_name": "PMM Stowage & Logistics", "reason": "…", "points": 2.2 }],
+  "data_gaps": ["…"],
+  "text_source": "ai",
+  "input_hash": "a1b2c3d4e5f60718",
+  "assessed_at": "2026-11-14T23:40:00+00:00",
   "disclaimer": "…"
 }
 ```
-- Levels: Low ≤20, Guarded ≤40, Elevated ≤60, High ≤80, Severe ≤100.
-- Overall = 0.6 × worst phase + 0.4 × day-weighted average of phases.
-- Bad input (no spaces, negative days, etc.) returns **422**.
+**How the numbers are made (differs from the handoff's placeholder model):**
+- Room score per phase = 0.45 material hazard + 0.20 fuel load + 0.15 ignition & oxygen sources
+  (own room + neighbours) + 0.10 airflow + 0.10 thickness, −5 for a smoke detector, −5 for an
+  extinguisher. Material hazard comes from the NASA burn / no-burn tests at that phase's oxygen.
+- Ship phase = 0.6 × riskiest stocked space + 0.4 × average stocked space.
+- **Overall = 0.6 × worse phase + 0.4 × day-weighted average** (not just the worse phase).
+  The same formula gives each room's `overall`. `driver` = the phase with the higher score.
+- **5 factors**, not 7: `material`, `fuel`, `sources`, `airflow`, `thickness`. Cabin pressure,
+  EVA-prep periods, machinery heat and Li-ion bagging are not scored yet (listed in `data_gaps`).
+- Empty spaces (nothing but safety gear) have `null` scores and no fixes.
+- Fix `points` = real drop in that room's overall score; `ship_points` and move `points` = real
+  drop in the ship's overall score. Code re-scores the ship with the change applied.
+- Moves only go to non-passage spaces with no ignition or oxygen source.
+
+**Frontend: show these numbers as they are; don't recompute scores, levels or points.**
+Map colours can still use the 3 bands (Low ≤ 40, Elevated ≤ 60, High > 60) on these scores.
+
+Always **200**: if Gemini is down or writes a wrong number twice, the text is plain template
+text and `text_source` is `"template"`. Identical requests are cached; each assessment is
+appended to `data/assessments.jsonl` (input + result, for M&P traceability).
+
+### POST `/api/chat`
+```json
+{ "tab": "overall",
+  "messages": [{ "role": "user", "text": "What single change lowers the score most?" }],
+  "assessment_input": { "...": "same JSON as POST /api/assess" } }
+```
+- `tab`: `overall` | `factors` | `moves` | `table`. Keep one thread per tab and send the
+  whole thread; agent turns go back as `{ "role": "agent", "text", "actions" }`.
+  Only the last 10 messages are used.
+- Response: `{ "reply": "…", "actions": [ { ...action, "label": "Swap X → Y", "points": 1.4 } ], "text_source": "ai" }`.
+  Actions are checked against the ship (unknown ids, wrong swap, duplicate add, move into a
+  passage are dropped) and `points` is the real drop in the ship's overall score.
+- A reply with a wrong number is retried once, then replaced with a short "couldn't answer"
+  message (`text_source: "fallback"`).
+- **503** if Gemini is unreachable: show "The agent could not be reached. Try again in a moment."
+
+### Applying an action (frontend)
+| `type` | Fields | Change to the ship |
+|---|---|---|
+| `swap` | `room_id`, `item_id`, `to` | Replace that item's library key with `to` (keep qty and size) |
+| `add` | `room_id`, `key` (`det` / `ext` / `mask`) | Add 1 of that library item, `default_cm` size |
+| `move` | `item_id`, `from_id`, `to_id` | Move the item to the other space |
 
 ---
 
@@ -250,7 +300,7 @@ Optional `locations` overrides the file. A location example:
   "neighbors": [{"name": "Battery", "hazard": "Potential ignition source"}],
   "conditions": {
     "cruise": {"oxygen_pct": 21, "pressure_psi": 14.7, "airflow_cm_s": 10, "gravity_g": 0},
-    "surface": {"oxygen_pct": 34, "pressure_psi": 8.2, "airflow_cm_s": 10, "gravity_g": 0.165}
+    "surface": {"oxygen_pct": 34, "pressure_psi": 8.2, "airflow_cm_s": 10, "gravity_g": 0.166}
   }
 }
 ```

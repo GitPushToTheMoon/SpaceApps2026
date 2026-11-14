@@ -1,0 +1,557 @@
+{
+ "conditions": {
+  "cruise": {
+   "gravity_g": 0,
+   "pressure_psia": 14.7,
+   "o2_percent": 21,
+   "ventilation": "normal",
+   "cruise_days": 180
+  },
+  "surface": {
+   "body": "Mars",
+   "gravity_g": 0.38,
+   "pressure_psia": 8.2,
+   "o2_percent": 34,
+   "stay_days": 30,
+   "eva_prep_periods_high_o2": 4
+  }
+ },
+ "out_of_scope": [
+  "launch"
+ ],
+ "spaces": [
+  {
+   "id": "n33",
+   "name": "Engine room",
+   "type": "Engine room",
+   "passage": false,
+   "airflow_cm_s": 12,
+   "capacity_kg": 80,
+   "neighbours": [
+    "n35"
+   ],
+   "items": [
+    {
+     "id": "n31",
+     "key": "pump",
+     "name": "Propellant pump controller",
+     "category": "machinery",
+     "flammability": null,
+     "ignition_source": true,
+     "oxygen_source": false,
+     "qty": 1,
+     "cm": [
+      40,
+      30,
+      20
+     ]
+    },
+    {
+     "id": "n32",
+     "key": "lube",
+     "name": "Lubricant oil",
+     "category": "material",
+     "flammability": "Moderate",
+     "ignition_source": false,
+     "oxygen_source": false,
+     "qty": 2,
+     "cm": [
+      10,
+      10,
+      20
+     ]
+    }
+   ]
+  },
+  {
+   "id": "n35",
+   "name": "Spine A",
+   "type": "Hall / tunnel (passage)",
+   "passage": true,
+   "airflow_cm_s": 10,
+   "capacity_kg": 20,
+   "neighbours": [
+    "n33",
+    "n36",
+    "n46",
+    "n49"
+   ],
+   "items": [
+    {
+     "id": "n34",
+     "key": "ctb",
+     "name": "Cargo transfer bag",
+     "category": "material",
+     "flammability": "Moderate",
+     "ignition_source": false,
+     "oxygen_source": false,
+     "qty": 1,
+     "cm": [
+      50,
+      42,
+      25
+     ],
+     "swap_to": "nomexbag"
+    }
+   ]
+  },
+  {
+   "id": "n36",
+   "name": "Spine B",
+   "type": "Hall / tunnel (passage)",
+   "passage": true,
+   "airflow_cm_s": 10,
+   "capacity_kg": 20,
+   "neighbours": [
+    "n35",
+    "n37",
+    "n52",
+    "n54"
+   ],
+   "items": []
+  },
+  {
+   "id": "n37",
+   "name": "Spine C",
+   "type": "Hall / tunnel (passage)",
+   "passage": true,
+   "airflow_cm_s": 10,
+   "capacity_kg": 20,
+   "neighbours": [
+    "n36",
+    "n38",
+    "n57",
+    "n59"
+   ],
+   "items": []
+  },
+  {
+   "id": "n38",
+   "name": "Spine D",
+   "type": "Hall / tunnel (passage)",
+   "passage": true,
+   "airflow_cm_s": 10,
+   "capacity_kg": 20,
+   "neighbours": [
+    "n37",
+    "n42",
+    "n62",
+    "n65"
+   ],
+   "items": []
+  },
+  {
+   "id": "n42",
+   "name": "Operations",
+   "type": "Operations",
+   "passage": false,
+   "airflow_cm_s": 10,
+   "capacity_kg": 60,
+   "neighbours": [
+    "n38"
+   ],
+   "items": [
+    {
+     "id": "n39",
+     "key": "consoles",
+     "name": "Flight control consoles",
+     "category": "machinery",
+     "flammability": null,
+     "ignition_source": true,
+     "oxygen_source": false,
+     "qty": 2,
+     "cm": [
+      80,
+      40,
+      30
+     ]
+    },
+    {
+     "id": "n40",
+     "key": "manuals",
+     "name": "Paper manuals",
+     "category": "material",
+     "flammability": "High",
+     "ignition_source": false,
+     "oxygen_source": false,
+     "qty": 3,
+     "cm": [
+      30,
+      22,
+      2
+     ],
+     "swap_to": "nomexbag"
+    },
+    {
+     "id": "n41",
+     "key": "det",
+     "name": "Smoke detector",
+     "category": "safety",
+     "flammability": null,
+     "ignition_source": false,
+     "oxygen_source": false,
+     "qty": 1,
+     "cm": [
+      10,
+      10,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "id": "n46",
+   "name": "Galley",
+   "type": "Galley",
+   "passage": false,
+   "airflow_cm_s": 12,
+   "capacity_kg": 60,
+   "neighbours": [
+    "n35",
+    "n52"
+   ],
+   "items": [
+    {
+     "id": "n43",
+     "key": "warmer",
+     "name": "Food warmer",
+     "category": "machinery",
+     "flammability": null,
+     "ignition_source": true,
+     "oxygen_source": false,
+     "qty": 1,
+     "cm": [
+      40,
+      30,
+      25
+     ]
+    },
+    {
+     "id": "n44",
+     "key": "food",
+     "name": "Packaged food",
+     "category": "material",
+     "flammability": "Moderate",
+     "ignition_source": false,
+     "oxygen_source": false,
+     "qty": 6,
+     "cm": [
+      20,
+      15,
+      8
+     ]
+    },
+    {
+     "id": "n45",
+     "key": "ext",
+     "name": "Portable extinguisher",
+     "category": "safety",
+     "flammability": null,
+     "ignition_source": false,
+     "oxygen_source": false,
+     "qty": 1,
+     "cm": [
+      50,
+      15,
+      15
+     ]
+    }
+   ]
+  },
+  {
+   "id": "n49",
+   "name": "Crew quarters",
+   "type": "Crew quarters",
+   "passage": false,
+   "airflow_cm_s": 8,
+   "capacity_kg": 50,
+   "neighbours": [
+    "n35",
+    "n54"
+   ],
+   "items": [
+    {
+     "id": "n47",
+     "key": "cotton",
+     "name": "Cotton clothing",
+     "category": "material",
+     "flammability": "High",
+     "ignition_source": false,
+     "oxygen_source": false,
+     "qty": 3,
+     "cm": [
+      30,
+      20,
+      5
+     ],
+     "swap_to": "nomexbag"
+    },
+    {
+     "id": "n48",
+     "key": "liion",
+     "name": "Li-ion battery pack",
+     "category": "machinery",
+     "flammability": null,
+     "ignition_source": true,
+     "oxygen_source": false,
+     "qty": 1,
+     "cm": [
+      20,
+      10,
+      8
+     ],
+     "bagged": false,
+     "swap_to": "liionbag"
+    }
+   ]
+  },
+  {
+   "id": "n52",
+   "name": "Lab",
+   "type": "Lab",
+   "passage": false,
+   "airflow_cm_s": 14,
+   "capacity_kg": 70,
+   "neighbours": [
+    "n36",
+    "n46",
+    "n57"
+   ],
+   "items": [
+    {
+     "id": "n50",
+     "key": "printer",
+     "name": "3D printer",
+     "category": "machinery",
+     "flammability": null,
+     "ignition_source": true,
+     "oxygen_source": false,
+     "qty": 1,
+     "cm": [
+      45,
+      45,
+      40
+     ]
+    },
+    {
+     "id": "n51",
+     "key": "pmma",
+     "name": "PMMA",
+     "category": "material",
+     "flammability": "High",
+     "ignition_source": false,
+     "oxygen_source": false,
+     "qty": 2,
+     "cm": [
+      10,
+      8,
+      4
+     ],
+     "test_dataset": {
+      "state": "solid",
+      "tests": 27
+     }
+    }
+   ]
+  },
+  {
+   "id": "n54",
+   "name": "Airlock",
+   "type": "Airlock",
+   "passage": false,
+   "airflow_cm_s": 10,
+   "capacity_kg": 40,
+   "neighbours": [
+    "n36",
+    "n49",
+    "n59"
+   ],
+   "items": [
+    {
+     "id": "n53",
+     "key": "oxygen",
+     "name": "Oxygen supply",
+     "category": "machinery",
+     "flammability": null,
+     "ignition_source": false,
+     "oxygen_source": true,
+     "qty": 1,
+     "cm": [
+      60,
+      30,
+      30
+     ]
+    }
+   ]
+  },
+  {
+   "id": "n57",
+   "name": "Power bay",
+   "type": "Power",
+   "passage": false,
+   "airflow_cm_s": 8,
+   "capacity_kg": 50,
+   "neighbours": [
+    "n37",
+    "n52",
+    "n62"
+   ],
+   "items": [
+    {
+     "id": "n55",
+     "key": "liion",
+     "name": "Li-ion battery pack",
+     "category": "machinery",
+     "flammability": null,
+     "ignition_source": true,
+     "oxygen_source": false,
+     "qty": 2,
+     "cm": [
+      20,
+      10,
+      8
+     ],
+     "bagged": false,
+     "swap_to": "liionbag"
+    },
+    {
+     "id": "n56",
+     "key": "pvc",
+     "name": "PVC-insulated wire harness",
+     "category": "material",
+     "flammability": "Moderate",
+     "ignition_source": false,
+     "oxygen_source": false,
+     "qty": 2,
+     "cm": [
+      100,
+      5,
+      5
+     ],
+     "swap_to": "ptfe"
+    }
+   ]
+  },
+  {
+   "id": "n59",
+   "name": "Hygiene",
+   "type": "Hygiene",
+   "passage": false,
+   "airflow_cm_s": 16,
+   "capacity_kg": 45,
+   "neighbours": [
+    "n37",
+    "n54",
+    "n65"
+   ],
+   "items": [
+    {
+     "id": "n58",
+     "key": "towels",
+     "name": "Cotton towels",
+     "category": "material",
+     "flammability": "High",
+     "ignition_source": false,
+     "oxygen_source": false,
+     "qty": 2,
+     "cm": [
+      40,
+      30,
+      1
+     ],
+     "swap_to": "nomexbag"
+    }
+   ]
+  },
+  {
+   "id": "n62",
+   "name": "Stowage",
+   "type": "Stowage",
+   "passage": false,
+   "airflow_cm_s": 3,
+   "capacity_kg": 140,
+   "neighbours": [
+    "n38",
+    "n57"
+   ],
+   "items": [
+    {
+     "id": "n60",
+     "key": "ctb",
+     "name": "Cargo transfer bag",
+     "category": "material",
+     "flammability": "Moderate",
+     "ignition_source": false,
+     "oxygen_source": false,
+     "qty": 2,
+     "cm": [
+      50,
+      42,
+      25
+     ],
+     "swap_to": "nomexbag"
+    },
+    {
+     "id": "n61",
+     "key": "foam",
+     "name": "Polyurethane foam",
+     "category": "material",
+     "flammability": "High",
+     "ignition_source": false,
+     "oxygen_source": false,
+     "qty": 1,
+     "cm": [
+      40,
+      30,
+      5
+     ],
+     "swap_to": "melamine"
+    }
+   ]
+  },
+  {
+   "id": "n65",
+   "name": "Life support",
+   "type": "Life support",
+   "passage": false,
+   "airflow_cm_s": 12,
+   "capacity_kg": 60,
+   "neighbours": [
+    "n38",
+    "n59"
+   ],
+   "items": [
+    {
+     "id": "n63",
+     "key": "oxygen",
+     "name": "Oxygen supply",
+     "category": "machinery",
+     "flammability": null,
+     "ignition_source": false,
+     "oxygen_source": true,
+     "qty": 1,
+     "cm": [
+      60,
+      30,
+      30
+     ]
+    },
+    {
+     "id": "n64",
+     "key": "fan",
+     "name": "Air circulation fan",
+     "category": "machinery",
+     "flammability": null,
+     "ignition_source": true,
+     "oxygen_source": false,
+     "qty": 2,
+     "cm": [
+      20,
+      20,
+      10
+     ]
+    }
+   ]
+  }
+ ]
+}

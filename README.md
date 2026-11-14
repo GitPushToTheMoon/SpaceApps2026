@@ -90,7 +90,9 @@ Everything except `POST /assess` works without Gemini.
 | `GET /experiments` | Experiments + AI summaries, ranked by relevance. Filters: `investigation` (FLEX, SAFFIRE, BASS-II, BRE…), `material`, `fuel_type`, `outcome_category`, `environment`, `sort` |
 | `GET /experiments/{id}` | One experiment (404 if not found) |
 | `POST /assess` | Risk assessment for given conditions |
-| `POST /stowage/assess` | Fire-risk score for a ship layout (cruise + surface) |
+| `GET /library` | Stowage planner item library |
+| `POST /api/assess` | Stowage planner: fire-risk scores, fixes and moves for a ship layout (cruise + surface) |
+| `POST /api/chat` | Stowage planner: one chat turn about the assessment |
 | `POST /admin/reload` | Re-read data files, clear cached answers |
 
 Full JSON shapes: **API.md** and **API_examples.json**.
@@ -121,14 +123,20 @@ backup model, `/assess` returns **502** "AI assessment unavailable"; everything 
 
 ---
 
-## How `POST /stowage/assess` works
-1. Each item gets a material hazard from the burn/no-burn tests at that phase's oxygen
-   (`backend/scoring.py`); untested materials use their Low/Medium/High hint.
-2. Each room combines hazard, fuel load, ignition sources (its own and its neighbours'),
-   airflow and item thickness, minus credit for detectors and extinguishers.
-3. Ship and overall scores are weighted from the rooms and phases.
-4. Gemini writes the text; any number it gets wrong sends it back once, then template
-   text is used. The endpoint keeps working (200) when Gemini is down.
+## How `POST /api/assess` works (stowage planner)
+1. **Adapter** (`adapter.py`) turns the planner JSON into scoring input; library keys link
+   items to the NASA test data (`data/library.json` → `material_key`).
+2. **Scores** (`scoring.py`): each material's hazard comes from the burn/no-burn tests at that
+   phase's oxygen (untested items use their Low/Moderate/High level). Each room combines
+   hazard, fuel load, ignition and oxygen sources (its own and its neighbours'), airflow and
+   thickness, minus credit for detectors and extinguishers. Ship and overall scores are
+   weighted from the rooms and phases.
+3. **Fixes and moves** (`actions.py`): code tries each swap, detector, extinguisher and move,
+   re-scores the ship, and keeps only changes that lower the score, with the real points.
+4. **Text** (`ai.py`): Gemini writes the summary, rationales and fix reasons from those facts.
+   Any wrong number sends it back once, then template text is used. Always returns 200.
+5. **Chat** (`POST /api/chat`): Gemini answers about one tab; its actions are checked and
+   re-scored by code. Returns 503 when Gemini is down.
 
 ## Data
 
@@ -150,7 +158,7 @@ backup model, `/assess` returns **502** "AI assessment unavailable"; everything 
   | heptane-isooctane | 50/50 fuel mix | liquid | 0 |
   | ethylene / methane | gas fuels | gas | 22 / 5 |
 
-- **presets.json**: ISS cabin (14.7 psi, 21% O2, 0 g), Moon habitat (8.2 psi, 34%, 0.165 g),
+- **presets.json**: ISS cabin (14.7 psi, 21% O2, 0 g), Moon habitat (8.2 psi, 34%, 0.166 g),
   Mars habitat (8.2 psi, 34%, 0.38 g). Temperature is display-only (no experiment recorded it).
 - Numbers come from the source documents, never from the AI.
 

@@ -457,43 +457,83 @@ def advise_placement(item: Dict, current: Dict, candidates: List[Dict], conditio
     return result
 
 
-STOWAGE_PROMPT = """You are a fire-safety assistant for spacecraft stowage engineers.
-Code has ALREADY scored the ship's fire risk from NASA microgravity combustion data.
-Your job is ONLY to write short plain-English text about those results.
+# ---------------------------------------------------------------- stowage planner (/api/assess, /api/chat)
+
+PLANNER_TEXT_PROMPT = """You are the fire-safety agent inside a stowage planning tool used by NASA
+stowage engineers. Code has ALREADY scored every space for two mission phases, in-space
+cruise (0 g) and surface operations, from NASA microgravity combustion data. Your job is
+ONLY to write short plain-English text about those results.
 
 Rules:
-- Never change, recalculate or invent a score, level or any other number. If you
-  mention a number, copy it exactly from the facts below.
-- Mention rooms only by the exact names listed below.
-- Explain WHY using the factors and items given (e.g. thin acrylic panels next to a
-  laptop, low airflow, cotton towels with no test data).
-- Actions must be things an engineer could do: move a named item to a lower-risk
-  room, bag or contain it, swap it for a less flammable listed material, add a smoke
-  detector or extinguisher, improve airflow. Highest-risk rooms first.
+- Never change, recalculate or invent a score, level or any other number. If you mention
+  a number, copy it exactly from the facts below. Prefer words to numbers.
+- Refer to spaces and items only by the exact names given.
+- Explain WHY using the factors and items given (thin acrylic beside a 3D printer, an
+  oxygen outlet next to foam, low airflow, an item with no NASA test data).
+- In microgravity there is no buoyant convection: flames are slower, but smoke reaches
+  detectors only through forced airflow, and loose soft goods drift.
 - Say when a score is an estimate because an item has no NASA test data.
 - {gravity_note}
-- Launch is out of scope.
-- This is a planning aid, not a safety certification.
+- Launch is out of scope. This is a planning aid, not a safety certification.
 
-Mission:
-{scenario}
-
-Scores (decided by code):
+Mission and scores (decided by code):
 {facts}
 
 Return JSON with exactly these keys:
-- "phases": {{"<phase name>": "<1-2 sentence summary>"}} for each phase listed
-- "rooms": {{"<room name>": "<1-2 sentence rationale>"}} for each STOCKED room
-- "actions": list of up to 5 {{"severity": "high"|"medium"|"low", "room": "<room name or null>", "title": "<one short instruction>"}}, most important first
-- "hazards": list of up to 4 short environment hazards for this mission
+- "summary": two plain sentences on the whole ship (which phase drives the overall and why)
+- "rooms": {{"<space id>": "<rationale, max 18 words>"}} for every space listed under "rooms"
+- "fixes": {{"<space id>": ["<why, max 14 words>", ...]}} one reason per fix listed for that
+  space, in the same order
+"""
+
+PLANNER_CHAT_TABS = {
+    "overall": "Overall fire risk",
+    "factors": "Risk factors",
+    "moves": "Suggested moves",
+    "table": "Space by space",
+}
+
+PLANNER_CHAT_PROMPT = """You are the fire-safety agent in a NASA stowage planning tool. The user is on
+the "{tab}" tab; keep answers focused on it. The two phases are in-space cruise (0 g) and
+surface operations. Scores below were computed by code from NASA test data: never change
+or invent a number, and copy any number you mention exactly. Be concise (under 110 words),
+concrete, and refer to spaces and items by name. {gravity_note}
+
+If you recommend changes, include them as actions using ids from the ship data:
+  {{"type":"swap","room_id","item_id","to":"<the item's swap_to key>"}}
+  {{"type":"add","room_id","key":"ext"|"det"}}
+  {{"type":"move","item_id","from_id","to_id"}}  (never into a passage)
+
+SHIP DATA:
+{ship}
+
+LATEST ASSESSMENT:
+{result}
+
+CONVERSATION SO FAR (oldest first):
+{history}
+
+Return ONLY JSON: {{"reply": "plain text", "actions": []}}
 """
 
 
-def stowage_text(scenario: Dict, facts: Dict, gravity_g: float = 0.0) -> dict:
-    """Used by POST /stowage/assess. facts = compact scores per phase and room (from scoring.py)."""
-    prompt = STOWAGE_PROMPT.format(
-        gravity_note=_gravity_note({"gravity_g": gravity_g}),
-        scenario=json.dumps(scenario, indent=2),
-        facts=json.dumps(facts, indent=2),
-    )
+def planner_text(facts: Dict, gravity_g: float = 0.0) -> dict:
+    """Used by POST /api/assess. facts = scores, rooms and fixes from code (backend/api.py)."""
+    prompt = PLANNER_TEXT_PROMPT.format(gravity_note=_gravity_note({"gravity_g": gravity_g}),
+                                        facts=json.dumps(facts, indent=1))
+    return ask_json(prompt)
+
+
+def planner_chat(tab: str, history: List[Dict], ship: Dict, result: Dict, gravity_g: float = 0.0) -> dict:
+    """Used by POST /api/chat. history = [{"role": "user"|"agent", "text", "actions"}], newest last."""
+    lines = []
+    for m in history:
+        if m["role"] == "user":
+            lines.append("USER: " + m["text"])
+        else:
+            lines.append("AGENT: " + json.dumps({"reply": m["text"], "actions": m.get("actions") or []}))
+    prompt = PLANNER_CHAT_PROMPT.format(tab=PLANNER_CHAT_TABS.get(tab, tab),
+                                        gravity_note=_gravity_note({"gravity_g": gravity_g}),
+                                        ship=json.dumps(ship), result=json.dumps(result),
+                                        history="\n".join(lines))
     return ask_json(prompt)

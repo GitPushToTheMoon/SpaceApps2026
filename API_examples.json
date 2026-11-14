@@ -136,353 +136,1207 @@
     ],
     "disclaimer": "Research aid based on NASA microgravity experiments. Not a safety certification."
   },
-  "POST /stowage/assess request": {
-    "scenario": {
-      "destination": "moon",
-      "cruise_days": 180,
-      "surface_days": 30
+  "GET /library (one item)": {
+    "key": "cotton",
+    "name": "Cotton clothing",
+    "category": "material",
+    "flammability": "High",
+    "ignition_source": false,
+    "oxygen_source": false,
+    "soft_goods": true,
+    "swap": "nomexbag",
+    "material_key": null
+  },
+  "POST /api/assess request (ISS layout, Moon)": {
+    "conditions": {
+      "cruise": {
+        "gravity_g": 0,
+        "pressure_psia": 14.7,
+        "o2_percent": 21,
+        "ventilation": "normal",
+        "cruise_days": 180
+      },
+      "surface": {
+        "body": "Moon",
+        "gravity_g": 0.166,
+        "pressure_psia": 10.2,
+        "o2_percent": 30,
+        "stay_days": 30,
+        "eva_prep_periods_high_o2": 4
+      }
     },
+    "out_of_scope": [
+      "launch"
+    ],
     "spaces": [
       {
+        "id": "n4",
+        "name": "PMM Stowage & Logistics",
+        "type": "Stowage",
+        "passage": false,
+        "airflow_cm_s": 3,
+        "capacity_kg": 140,
+        "neighbours": [
+          "n12"
+        ],
+        "items": [
+          {
+            "id": "n1",
+            "key": "ctb",
+            "name": "Cargo transfer bag",
+            "category": "material",
+            "flammability": "Moderate",
+            "ignition_source": false,
+            "oxygen_source": false,
+            "qty": 1,
+            "cm": [
+              50,
+              42,
+              25
+            ],
+            "swap_to": "nomexbag"
+          },
+          {
+            "id": "n2",
+            "key": "cotton",
+            "name": "Cotton clothing",
+            "category": "material",
+            "flammability": "High",
+            "ignition_source": false,
+            "oxygen_source": false,
+            "qty": 2,
+            "cm": [
+              30,
+              20,
+              5
+            ],
+            "swap_to": "nomexbag"
+          },
+          {
+            "id": "n3",
+            "key": "det",
+            "name": "Smoke detector",
+            "category": "safety",
+            "flammability": null,
+            "ignition_source": false,
+            "oxygen_source": false,
+            "qty": 1,
+            "cm": [
+              10,
+              10,
+              5
+            ]
+          }
+        ]
+      },
+      {
+        "id": "n7",
+        "name": "Quest Airlock",
+        "type": "Airlock",
+        "passage": false,
+        "airflow_cm_s": 10,
+        "capacity_kg": 40,
+        "neighbours": [
+          "n12"
+        ],
+        "items": [
+          {
+            "id": "n5",
+            "key": "oxygen",
+            "name": "Oxygen supply",
+            "category": "machinery",
+            "flammability": null,
+            "ignition_source": false,
+            "oxygen_source": true,
+            "qty": 1,
+            "cm": [
+              60,
+              30,
+              30
+            ]
+          },
+          {
+            "id": "n6",
+            "key": "foam",
+            "name": "Polyurethane foam",
+            "category": "material",
+            "flammability": "High",
+            "ignition_source": false,
+            "oxygen_source": false,
+            "qty": 1,
+            "cm": [
+              40,
+              30,
+              4
+            ],
+            "swap_to": "melamine"
+          }
+        ]
+      },
+      {
+        "id": "n12",
+        "name": "Node 1 Galley",
+        "type": "Galley",
+        "passage": false,
+        "airflow_cm_s": 12,
+        "capacity_kg": 60,
+        "neighbours": [
+          "n4",
+          "n7",
+          "n18",
+          "n26"
+        ],
+        "items": [
+          {
+            "id": "n8",
+            "key": "warmer",
+            "name": "Food warmer",
+            "category": "machinery",
+            "flammability": null,
+            "ignition_source": true,
+            "oxygen_source": false,
+            "qty": 1,
+            "cm": [
+              40,
+              30,
+              25
+            ]
+          },
+          {
+            "id": "n9",
+            "key": "food",
+            "name": "Packaged food",
+            "category": "material",
+            "flammability": "Moderate",
+            "ignition_source": false,
+            "oxygen_source": false,
+            "qty": 6,
+            "cm": [
+              20,
+              15,
+              8
+            ]
+          },
+          {
+            "id": "n10",
+            "key": "wipes",
+            "name": "Alcohol wipes",
+            "category": "material",
+            "flammability": "High",
+            "ignition_source": false,
+            "oxygen_source": false,
+            "qty": 4,
+            "cm": [
+              15,
+              10,
+              6
+            ],
+            "swap_to": "canister"
+          },
+          {
+            "id": "n11",
+            "key": "ext",
+            "name": "Portable extinguisher",
+            "category": "safety",
+            "flammability": null,
+            "ignition_source": false,
+            "oxygen_source": false,
+            "qty": 1,
+            "cm": [
+              50,
+              15,
+              15
+            ]
+          }
+        ]
+      },
+      {
+        "id": "n18",
         "name": "Destiny Lab",
         "type": "Lab",
-        "position": {
-          "x": 2,
-          "y": 1
-        },
+        "passage": false,
         "airflow_cm_s": 14,
+        "capacity_kg": 70,
+        "neighbours": [
+          "n12",
+          "n23"
+        ],
         "items": [
           {
-            "name": "Acrylic panels",
-            "material_key": "PMMA",
-            "quantity": 2,
-            "dimensions_cm": {
-              "l": 30,
-              "w": 20,
-              "h": 0.4
+            "id": "n13",
+            "key": "printer",
+            "name": "3D printer",
+            "category": "machinery",
+            "flammability": null,
+            "ignition_source": true,
+            "oxygen_source": false,
+            "qty": 1,
+            "cm": [
+              45,
+              45,
+              40
+            ]
+          },
+          {
+            "id": "n14",
+            "key": "pmma",
+            "name": "PMMA",
+            "category": "material",
+            "flammability": "High",
+            "ignition_source": false,
+            "oxygen_source": false,
+            "qty": 3,
+            "cm": [
+              10,
+              8,
+              4
+            ],
+            "test_dataset": {
+              "state": "solid",
+              "tests": 27
             }
           },
           {
+            "id": "n15",
+            "key": "laptop",
             "name": "Laptop",
             "category": "machinery",
-            "ignition_source": true
+            "flammability": null,
+            "ignition_source": true,
+            "oxygen_source": false,
+            "qty": 2,
+            "cm": [
+              35,
+              25,
+              3
+            ]
           },
           {
-            "name": "Smoke detector",
-            "category": "safety"
-          },
-          {
+            "id": "n16",
+            "key": "ext",
             "name": "Portable extinguisher",
-            "category": "safety"
-          }
-        ]
-      },
-      {
-        "name": "PMM Stowage",
-        "type": "Stowage",
-        "position": {
-          "x": 2,
-          "y": 0
-        },
-        "airflow_cm_s": 3,
-        "items": [
-          {
-            "name": "Cotton towels",
-            "material_key": "cotton fabric",
-            "flammability": "High",
-            "quantity": 10,
-            "dimensions_cm": {
-              "l": 50,
-              "w": 30,
-              "h": 1
-            }
+            "category": "safety",
+            "flammability": null,
+            "ignition_source": false,
+            "oxygen_source": false,
+            "qty": 1,
+            "cm": [
+              50,
+              15,
+              15
+            ]
           },
           {
-            "name": "Polyurethane foam",
-            "flammability": "High",
-            "quantity": 2,
-            "dimensions_cm": {
-              "l": 40,
-              "w": 40,
-              "h": 5
-            }
+            "id": "n17",
+            "key": "det",
+            "name": "Smoke detector",
+            "category": "safety",
+            "flammability": null,
+            "ignition_source": false,
+            "oxygen_source": false,
+            "qty": 1,
+            "cm": [
+              10,
+              10,
+              5
+            ]
           }
         ]
       },
       {
-        "name": "Crew quarters",
+        "id": "n23",
+        "name": "Node 2 Crew Quarters",
         "type": "Crew quarters",
-        "position": {
-          "x": 3,
-          "y": 1
-        },
+        "passage": false,
         "airflow_cm_s": 8,
+        "capacity_kg": 50,
+        "neighbours": [
+          "n18",
+          "n30"
+        ],
         "items": [
           {
-            "name": "Nomex-bagged clothing",
-            "material_key": "Nomex",
-            "quantity": 4,
-            "dimensions_cm": {
-              "l": 30,
-              "w": 20,
-              "h": 10
-            }
+            "id": "n19",
+            "key": "nomexbag",
+            "name": "Nomex-bagged soft goods",
+            "category": "material",
+            "flammability": "Low",
+            "ignition_source": false,
+            "oxygen_source": false,
+            "qty": 4,
+            "cm": [
+              30,
+              20,
+              5
+            ]
+          },
+          {
+            "id": "n20",
+            "key": "laptop",
+            "name": "Laptop",
+            "category": "machinery",
+            "flammability": null,
+            "ignition_source": true,
+            "oxygen_source": false,
+            "qty": 1,
+            "cm": [
+              35,
+              25,
+              3
+            ]
+          },
+          {
+            "id": "n21",
+            "key": "liion",
+            "name": "Li-ion battery pack",
+            "category": "machinery",
+            "flammability": null,
+            "ignition_source": true,
+            "oxygen_source": false,
+            "qty": 1,
+            "cm": [
+              20,
+              10,
+              8
+            ],
+            "bagged": false,
+            "swap_to": "liionbag"
+          },
+          {
+            "id": "n22",
+            "key": "det",
+            "name": "Smoke detector",
+            "category": "safety",
+            "flammability": null,
+            "ignition_source": false,
+            "oxygen_source": false,
+            "qty": 1,
+            "cm": [
+              10,
+              10,
+              5
+            ]
           }
         ]
       },
       {
-        "name": "Node 1",
-        "kind": "passage",
-        "position": {
-          "x": 1,
-          "y": 1
-        },
-        "airflow_cm_s": 10,
-        "items": []
+        "id": "n26",
+        "name": "Node 3 Hygiene & Exercise",
+        "type": "Hygiene",
+        "passage": false,
+        "airflow_cm_s": 16,
+        "capacity_kg": 45,
+        "neighbours": [
+          "n12"
+        ],
+        "items": [
+          {
+            "id": "n24",
+            "key": "exercise",
+            "name": "Motorised exercise device",
+            "category": "machinery",
+            "flammability": null,
+            "ignition_source": true,
+            "oxygen_source": false,
+            "qty": 1,
+            "cm": [
+              120,
+              60,
+              50
+            ]
+          },
+          {
+            "id": "n25",
+            "key": "towels",
+            "name": "Cotton towels",
+            "category": "material",
+            "flammability": "High",
+            "ignition_source": false,
+            "oxygen_source": false,
+            "qty": 2,
+            "cm": [
+              40,
+              30,
+              1
+            ],
+            "swap_to": "nomexbag"
+          }
+        ]
+      },
+      {
+        "id": "n30",
+        "name": "Columbus Lab",
+        "type": "Lab",
+        "passage": false,
+        "airflow_cm_s": 14,
+        "capacity_kg": 70,
+        "neighbours": [
+          "n23"
+        ],
+        "items": [
+          {
+            "id": "n27",
+            "key": "ptfe",
+            "name": "PTFE-insulated wire harness",
+            "category": "material",
+            "flammability": "Low",
+            "ignition_source": false,
+            "oxygen_source": false,
+            "qty": 3,
+            "cm": [
+              100,
+              5,
+              5
+            ]
+          },
+          {
+            "id": "n28",
+            "key": "laptop",
+            "name": "Laptop",
+            "category": "machinery",
+            "flammability": null,
+            "ignition_source": true,
+            "oxygen_source": false,
+            "qty": 1,
+            "cm": [
+              35,
+              25,
+              3
+            ]
+          },
+          {
+            "id": "n29",
+            "key": "det",
+            "name": "Smoke detector",
+            "category": "safety",
+            "flammability": null,
+            "ignition_source": false,
+            "oxygen_source": false,
+            "qty": 1,
+            "cm": [
+              10,
+              10,
+              5
+            ]
+          }
+        ]
       }
     ]
   },
-  "POST /stowage/assess response (template text)": {
+  "POST /api/assess response (template text)": {
     "overall": {
-      "score": 66.5,
-      "level": "High"
+      "score": 60.2,
+      "level": "High",
+      "driver": "surf",
+      "summary": "Surface drives the overall score of 60.2 (High). The riskiest space is PMM Stowage & Logistics at 65.6."
     },
     "phases": {
       "cruise": {
-        "score": 56.8,
-        "level": "Elevated",
-        "summary": "Ship scores 56.8 (Elevated) during cruise. Riskiest space: PMM Stowage (67.3)."
+        "score": 50.1,
+        "level": "Elevated"
       },
-      "surface": {
-        "score": 71.6,
-        "level": "High",
-        "summary": "Ship scores 71.6 (High) during surface. Riskiest space: PMM Stowage (78.6)."
+      "surf": {
+        "score": 65.4,
+        "level": "High"
       }
     },
     "rooms": [
       {
+        "id": "n4",
+        "name": "PMM Stowage & Logistics",
+        "stocked": true,
+        "cruise": 57.0,
+        "surf": 70.1,
+        "overall": 65.6,
+        "cruise_level": "Elevated",
+        "surf_level": "High",
+        "level": "High",
+        "rationale": "Main drivers: fuel load and material hazard (NASA test data). Some items have no NASA test data.",
+        "fixes": [
+          {
+            "title": "Swap Cotton clothing for Nomex-bagged soft goods",
+            "why": "High item; the swap is rated Low",
+            "points": 7.1,
+            "ship_points": 1.5,
+            "action": {
+              "type": "swap",
+              "room_id": "n4",
+              "item_id": "n2",
+              "to": "nomexbag",
+              "key": null,
+              "from_id": null,
+              "to_id": null
+            }
+          },
+          {
+            "title": "Add a portable extinguisher",
+            "why": "Fuel is stowed with no extinguisher in reach",
+            "points": 5.0,
+            "ship_points": 1.4,
+            "action": {
+              "type": "add",
+              "room_id": "n4",
+              "item_id": null,
+              "to": null,
+              "key": "ext",
+              "from_id": null,
+              "to_id": null
+            }
+          },
+          {
+            "title": "Swap Cargo transfer bag for Nomex-bagged soft goods",
+            "why": "Moderate item; the swap is rated Low",
+            "points": 4.3,
+            "ship_points": 1.3,
+            "action": {
+              "type": "swap",
+              "room_id": "n4",
+              "item_id": "n1",
+              "to": "nomexbag",
+              "key": null,
+              "from_id": null,
+              "to_id": null
+            }
+          }
+        ],
+        "factors": {
+          "cruise": {
+            "material": 66.0,
+            "fuel": 100.0,
+            "sources": 35.0,
+            "airflow": 51.0,
+            "thickness": 20.0
+          },
+          "surf": {
+            "material": 95.0,
+            "fuel": 100.0,
+            "sources": 35.0,
+            "airflow": 51.0,
+            "thickness": 20.0
+          }
+        },
+        "items": [
+          {
+            "id": "n1",
+            "name": "Cargo transfer bag",
+            "material_key": null,
+            "hazard": {
+              "cruise": 50.0,
+              "surf": 95.0
+            },
+            "evidence": "none",
+            "basis": "no NASA test data; estimate from the item's flammability level"
+          },
+          {
+            "id": "n2",
+            "name": "Cotton clothing",
+            "material_key": null,
+            "hazard": {
+              "cruise": 70.0,
+              "surf": 95.0
+            },
+            "evidence": "none",
+            "basis": "no NASA test data; estimate from the item's flammability level"
+          }
+        ]
+      },
+      {
+        "id": "n7",
+        "name": "Quest Airlock",
+        "stocked": true,
+        "cruise": 51.3,
+        "surf": 62.5,
+        "overall": 58.7,
+        "cruise_level": "Elevated",
+        "surf_level": "High",
+        "level": "Elevated",
+        "rationale": "Main drivers: material hazard (NASA test data) and ignition and oxygen sources. Some items have no NASA test data.",
+        "fixes": [
+          {
+            "title": "Swap Polyurethane foam for Melamine foam",
+            "why": "High item; the swap is rated Low",
+            "points": 23.7,
+            "ship_points": 1.4,
+            "action": {
+              "type": "swap",
+              "room_id": "n7",
+              "item_id": "n6",
+              "to": "melamine",
+              "key": null,
+              "from_id": null,
+              "to_id": null
+            }
+          },
+          {
+            "title": "Add a smoke detector",
+            "why": "No smoke detection in this space",
+            "points": 5.0,
+            "ship_points": 0.3,
+            "action": {
+              "type": "add",
+              "room_id": "n7",
+              "item_id": null,
+              "to": null,
+              "key": "det",
+              "from_id": null,
+              "to_id": null
+            }
+          },
+          {
+            "title": "Add a portable extinguisher",
+            "why": "Fuel is stowed with no extinguisher in reach",
+            "points": 5.0,
+            "ship_points": 0.3,
+            "action": {
+              "type": "add",
+              "room_id": "n7",
+              "item_id": null,
+              "to": null,
+              "key": "ext",
+              "from_id": null,
+              "to_id": null
+            }
+          }
+        ],
+        "factors": {
+          "cruise": {
+            "material": 70.0,
+            "fuel": 26.4,
+            "sources": 60.0,
+            "airflow": 20.0,
+            "thickness": 35.0
+          },
+          "surf": {
+            "material": 95.0,
+            "fuel": 26.4,
+            "sources": 60.0,
+            "airflow": 20.0,
+            "thickness": 35.0
+          }
+        },
+        "items": [
+          {
+            "id": "n6",
+            "name": "Polyurethane foam",
+            "material_key": null,
+            "hazard": {
+              "cruise": 70.0,
+              "surf": 95.0
+            },
+            "evidence": "none",
+            "basis": "no NASA test data; estimate from the item's flammability level"
+          }
+        ]
+      },
+      {
+        "id": "n12",
+        "name": "Node 1 Galley",
+        "stocked": true,
+        "cruise": 51.1,
+        "surf": 69.4,
+        "overall": 63.1,
+        "cruise_level": "Elevated",
+        "surf_level": "High",
+        "level": "High",
+        "rationale": "Main drivers: fuel load and material hazard (NASA test data). Some items have no NASA test data.",
+        "fixes": [
+          {
+            "title": "Swap Alcohol wipes for Wipes in sealed canister",
+            "why": "High item; the swap is rated Low",
+            "points": 8.0,
+            "ship_points": 0.5,
+            "action": {
+              "type": "swap",
+              "room_id": "n12",
+              "item_id": "n10",
+              "to": "canister",
+              "key": null,
+              "from_id": null,
+              "to_id": null
+            }
+          },
+          {
+            "title": "Add a smoke detector",
+            "why": "No smoke detection in this space",
+            "points": 5.0,
+            "ship_points": 0.3,
+            "action": {
+              "type": "add",
+              "room_id": "n12",
+              "item_id": null,
+              "to": null,
+              "key": "det",
+              "from_id": null,
+              "to_id": null
+            }
+          }
+        ],
+        "factors": {
+          "cruise": {
+            "material": 66.0,
+            "fuel": 69.3,
+            "sources": 57.0,
+            "airflow": 20.0,
+            "thickness": 20.0
+          },
+          "surf": {
+            "material": 95.0,
+            "fuel": 95.7,
+            "sources": 57.0,
+            "airflow": 20.0,
+            "thickness": 20.0
+          }
+        },
+        "items": [
+          {
+            "id": "n9",
+            "name": "Packaged food",
+            "material_key": null,
+            "hazard": {
+              "cruise": 50.0,
+              "surf": 95.0
+            },
+            "evidence": "none",
+            "basis": "no NASA test data; estimate from the item's flammability level"
+          },
+          {
+            "id": "n10",
+            "name": "Alcohol wipes",
+            "material_key": null,
+            "hazard": {
+              "cruise": 70.0,
+              "surf": 95.0
+            },
+            "evidence": "none",
+            "basis": "no NASA test data; estimate from the item's flammability level"
+          }
+        ]
+      },
+      {
+        "id": "n18",
         "name": "Destiny Lab",
         "stocked": true,
-        "phases": {
+        "cruise": 31.6,
+        "surf": 55.7,
+        "overall": 47.4,
+        "cruise_level": "Guarded",
+        "surf_level": "Elevated",
+        "level": "Elevated",
+        "rationale": "Main drivers: material hazard (NASA test data) and ignition and oxygen sources.",
+        "fixes": [],
+        "factors": {
           "cruise": {
-            "score": 33.0,
-            "level": "Guarded",
-            "factors": {
-              "material": 46.8,
-              "fuel": 14.3,
-              "sources": 57.0,
-              "airflow": 20.0,
-              "thickness": 85.0
-            },
-            "items": [
-              {
-                "name": "Acrylic panels",
-                "material_key": "PMMA",
-                "hazard": 46.8,
-                "evidence": "strong",
-                "basis": "burned from 21.9%, went out at 20.9% or below"
-              }
-            ],
-            "gaps": []
+            "material": 46.8,
+            "fuel": 14.3,
+            "sources": 81.0,
+            "airflow": 20.0,
+            "thickness": 35.0
           },
-          "surface": {
-            "score": 57.1,
-            "level": "Elevated",
-            "factors": {
-              "material": 95.0,
-              "fuel": 26.4,
-              "sources": 57.0,
-              "airflow": 20.0,
-              "thickness": 85.0
-            },
-            "items": [
-              {
-                "name": "Acrylic panels",
-                "material_key": "PMMA",
-                "hazard": 95.0,
-                "evidence": "limited",
-                "basis": "burned from 21.9%, went out at 20.9% or below"
-              }
-            ],
-            "gaps": [
-              "Acrylic panels: no tests within 3% of 34% oxygen",
-              "No partial-gravity combustion data yet; scores use microgravity tests."
-            ]
+          "surf": {
+            "material": 95.0,
+            "fuel": 26.4,
+            "sources": 81.0,
+            "airflow": 20.0,
+            "thickness": 35.0
           }
         },
-        "rationale": "Main drivers: material (95), thickness (85)."
+        "items": [
+          {
+            "id": "n14",
+            "name": "PMMA",
+            "material_key": "PMMA",
+            "hazard": {
+              "cruise": 46.8,
+              "surf": 95.0
+            },
+            "evidence": "limited",
+            "basis": "burned from 21.9%, went out at 20.9% or below"
+          }
+        ]
       },
       {
-        "name": "PMM Stowage",
+        "id": "n23",
+        "name": "Node 2 Crew Quarters",
         "stocked": true,
-        "phases": {
+        "cruise": 17.8,
+        "surf": 44.9,
+        "overall": 35.6,
+        "cruise_level": "Low",
+        "surf_level": "Elevated",
+        "level": "Guarded",
+        "rationale": "Main drivers: ignition and oxygen sources and material hazard (NASA test data). Some items have no NASA test data.",
+        "fixes": [
+          {
+            "title": "Add a portable extinguisher",
+            "why": "Fuel is stowed with no extinguisher in reach",
+            "points": 5.0,
+            "ship_points": 0.3,
+            "action": {
+              "type": "add",
+              "room_id": "n23",
+              "item_id": null,
+              "to": null,
+              "key": "ext",
+              "from_id": null,
+              "to_id": null
+            }
+          }
+        ],
+        "factors": {
           "cruise": {
-            "score": 67.3,
-            "level": "High",
-            "factors": {
-              "material": 70.0,
-              "fuel": 100.0,
-              "sources": 35.0,
-              "airflow": 51.0,
-              "thickness": 55.0
-            },
-            "items": [
-              {
-                "name": "Cotton towels",
-                "material_key": "cotton fabric",
-                "hazard": 70.0,
-                "evidence": "none",
-                "basis": "no NASA test data; estimate from the item's flammability level"
-              },
-              {
-                "name": "Polyurethane foam",
-                "material_key": null,
-                "hazard": 70.0,
-                "evidence": "none",
-                "basis": "no NASA test data; estimate from the item's flammability level"
-              }
-            ],
-            "gaps": [
-              "Cotton towels: no NASA test data; score is an estimate",
-              "Polyurethane foam: no NASA test data; score is an estimate"
-            ]
+            "material": 30.0,
+            "fuel": 21.4,
+            "sources": 20.0,
+            "airflow": 20.0,
+            "thickness": 0.0
           },
-          "surface": {
-            "score": 78.6,
-            "level": "High",
-            "factors": {
-              "material": 95.0,
-              "fuel": 100.0,
-              "sources": 35.0,
-              "airflow": 51.0,
-              "thickness": 55.0
-            },
-            "items": [
-              {
-                "name": "Cotton towels",
-                "material_key": "cotton fabric",
-                "hazard": 95.0,
-                "evidence": "none",
-                "basis": "no NASA test data; estimate from the item's flammability level"
-              },
-              {
-                "name": "Polyurethane foam",
-                "material_key": null,
-                "hazard": 95.0,
-                "evidence": "none",
-                "basis": "no NASA test data; estimate from the item's flammability level"
-              }
-            ],
-            "gaps": [
-              "Cotton towels: no NASA test data; score is an estimate",
-              "Polyurethane foam: no NASA test data; score is an estimate",
-              "No partial-gravity combustion data yet; scores use microgravity tests."
-            ]
+          "surf": {
+            "material": 60.0,
+            "fuel": 42.9,
+            "sources": 69.0,
+            "airflow": 20.0,
+            "thickness": 20.0
           }
         },
-        "rationale": "Main drivers: fuel (100), material (95)."
+        "items": [
+          {
+            "id": "n19",
+            "name": "Nomex-bagged soft goods",
+            "material_key": null,
+            "hazard": {
+              "cruise": 30.0,
+              "surf": 60.0
+            },
+            "evidence": "none",
+            "basis": "no NASA test data; estimate from the item's flammability level"
+          }
+        ]
       },
       {
-        "name": "Crew quarters",
+        "id": "n26",
+        "name": "Node 3 Hygiene & Exercise",
         "stocked": true,
-        "phases": {
-          "cruise": {
-            "score": 22.7,
-            "level": "Guarded",
-            "factors": {
-              "material": 33.2,
-              "fuel": 28.6,
-              "sources": 0.0,
-              "airflow": 20.0,
-              "thickness": 0.0
-            },
-            "items": [
-              {
-                "name": "Nomex-bagged clothing",
-                "material_key": "Nomex",
-                "hazard": 33.2,
-                "evidence": "limited",
-                "basis": "never burned in tests up to 22.1%"
-              }
-            ],
-            "gaps": []
+        "cruise": 53.4,
+        "surf": 64.7,
+        "overall": 60.8,
+        "cruise_level": "Elevated",
+        "surf_level": "High",
+        "level": "High",
+        "rationale": "Main drivers: material hazard (NASA test data) and ignition and oxygen sources. Some items have no NASA test data.",
+        "fixes": [
+          {
+            "title": "Swap Cotton towels for Nomex-bagged soft goods",
+            "why": "High item; the swap is rated Low",
+            "points": 23.2,
+            "ship_points": 1.4,
+            "action": {
+              "type": "swap",
+              "room_id": "n26",
+              "item_id": "n25",
+              "to": "nomexbag",
+              "key": null,
+              "from_id": null,
+              "to_id": null
+            }
           },
-          "surface": {
-            "score": 47.7,
-            "level": "Elevated",
-            "factors": {
-              "material": 60.0,
-              "fuel": 57.1,
-              "sources": 35.0,
-              "airflow": 20.0,
-              "thickness": 20.0
-            },
-            "items": [
-              {
-                "name": "Nomex-bagged clothing",
-                "material_key": "Nomex",
-                "hazard": 60.0,
-                "evidence": "limited",
-                "basis": "never burned in tests up to 22.1%"
-              }
-            ],
-            "gaps": [
-              "Nomex-bagged clothing: never tested above 22.1% oxygen",
-              "No partial-gravity combustion data yet; scores use microgravity tests."
-            ]
+          {
+            "title": "Add a smoke detector",
+            "why": "No smoke detection in this space",
+            "points": 5.0,
+            "ship_points": 0.3,
+            "action": {
+              "type": "add",
+              "room_id": "n26",
+              "item_id": null,
+              "to": null,
+              "key": "det",
+              "from_id": null,
+              "to_id": null
+            }
+          },
+          {
+            "title": "Add a portable extinguisher",
+            "why": "Fuel is stowed with no extinguisher in reach",
+            "points": 5.0,
+            "ship_points": 0.3,
+            "action": {
+              "type": "add",
+              "room_id": "n26",
+              "item_id": null,
+              "to": null,
+              "key": "ext",
+              "from_id": null,
+              "to_id": null
+            }
+          }
+        ],
+        "factors": {
+          "cruise": {
+            "material": 70.0,
+            "fuel": 26.4,
+            "sources": 57.0,
+            "airflow": 26.0,
+            "thickness": 55.0
+          },
+          "surf": {
+            "material": 95.0,
+            "fuel": 26.4,
+            "sources": 57.0,
+            "airflow": 26.0,
+            "thickness": 55.0
           }
         },
-        "rationale": "Main drivers: material (60), fuel (57.1)."
+        "items": [
+          {
+            "id": "n25",
+            "name": "Cotton towels",
+            "material_key": null,
+            "hazard": {
+              "cruise": 70.0,
+              "surf": 95.0
+            },
+            "evidence": "none",
+            "basis": "no NASA test data; estimate from the item's flammability level"
+          }
+        ]
       },
       {
-        "name": "Node 1",
-        "stocked": false,
-        "phases": {
+        "id": "n30",
+        "name": "Columbus Lab",
+        "stocked": true,
+        "cruise": 16.4,
+        "surf": 40.3,
+        "overall": 32.1,
+        "cruise_level": "Low",
+        "surf_level": "Elevated",
+        "level": "Guarded",
+        "rationale": "Main drivers: material hazard (NASA test data) and ignition and oxygen sources. Some items have no NASA test data.",
+        "fixes": [
+          {
+            "title": "Add a portable extinguisher",
+            "why": "Fuel is stowed with no extinguisher in reach",
+            "points": 5.0,
+            "ship_points": 0.3,
+            "action": {
+              "type": "add",
+              "room_id": "n30",
+              "item_id": null,
+              "to": null,
+              "key": "ext",
+              "from_id": null,
+              "to_id": null
+            }
+          }
+        ],
+        "factors": {
           "cruise": {
-            "score": 0.0,
-            "level": "Low",
-            "factors": {},
-            "items": [],
-            "gaps": []
+            "material": 30.0,
+            "fuel": 14.3,
+            "sources": 20.0,
+            "airflow": 20.0,
+            "thickness": 0.0
           },
-          "surface": {
-            "score": 0.0,
-            "level": "Low",
-            "factors": {},
-            "items": [],
-            "gaps": []
+          "surf": {
+            "material": 60.0,
+            "fuel": 28.6,
+            "sources": 57.0,
+            "airflow": 20.0,
+            "thickness": 20.0
           }
         },
-        "rationale": ""
+        "items": [
+          {
+            "id": "n27",
+            "name": "PTFE-insulated wire harness",
+            "material_key": null,
+            "hazard": {
+              "cruise": 30.0,
+              "surf": 60.0
+            },
+            "evidence": "none",
+            "basis": "no NASA test data; estimate from the item's flammability level"
+          }
+        ]
       }
     ],
-    "actions": [
+    "factors": [
       {
-        "severity": "high",
-        "room": "PMM Stowage",
-        "title": "Review flammable items in PMM Stowage (highest hazard: Cotton towels): bag, move or swap them"
+        "key": "material",
+        "name": "Material hazard (NASA test data)",
+        "weight": 0.45,
+        "cruise": {
+          "avg": 54.1,
+          "min": 30.0,
+          "max": 70.0
+        },
+        "surf": {
+          "avg": 85.0,
+          "min": 60.0,
+          "max": 95.0
+        }
       },
       {
-        "severity": "medium",
-        "room": "Destiny Lab",
-        "title": "Review flammable items in Destiny Lab (highest hazard: Acrylic panels): bag, move or swap them"
+        "key": "fuel",
+        "name": "Fuel load",
+        "weight": 0.2,
+        "cruise": {
+          "avg": 38.9,
+          "min": 14.3,
+          "max": 100.0
+        },
+        "surf": {
+          "avg": 49.5,
+          "min": 26.4,
+          "max": 100.0
+        }
       },
       {
-        "severity": "medium",
-        "room": "Crew quarters",
-        "title": "Review flammable items in Crew quarters (highest hazard: Nomex-bagged clothing): bag, move or swap them"
+        "key": "sources",
+        "name": "Ignition & oxygen sources",
+        "weight": 0.15,
+        "cruise": {
+          "avg": 47.1,
+          "min": 20.0,
+          "max": 81.0
+        },
+        "surf": {
+          "avg": 59.4,
+          "min": 35.0,
+          "max": 81.0
+        }
+      },
+      {
+        "key": "airflow",
+        "name": "Airflow",
+        "weight": 0.1,
+        "cruise": {
+          "avg": 25.3,
+          "min": 20.0,
+          "max": 51.0
+        },
+        "surf": {
+          "avg": 25.3,
+          "min": 20.0,
+          "max": 51.0
+        }
+      },
+      {
+        "key": "thickness",
+        "name": "Material thickness",
+        "weight": 0.1,
+        "cruise": {
+          "avg": 23.6,
+          "min": 0.0,
+          "max": 55.0
+        },
+        "surf": {
+          "avg": 29.3,
+          "min": 20.0,
+          "max": 55.0
+        }
       }
     ],
-    "hazards": [],
+    "moves": [
+      {
+        "item_id": "n6",
+        "item": "Polyurethane foam",
+        "qty": 1,
+        "from_id": "n7",
+        "from_name": "Quest Airlock",
+        "to_id": "n4",
+        "to_name": "PMM Stowage & Logistics",
+        "reason": "Away from the oxygen outlet; no ignition or oxygen source there",
+        "points": 2.2
+      },
+      {
+        "item_id": "n14",
+        "item": "PMMA",
+        "qty": 3,
+        "from_id": "n18",
+        "from_name": "Destiny Lab",
+        "to_id": "n4",
+        "to_name": "PMM Stowage & Logistics",
+        "reason": "Away from the ignition sources; no ignition or oxygen source there",
+        "points": 1.9
+      },
+      {
+        "item_id": "n9",
+        "item": "Packaged food",
+        "qty": 6,
+        "from_id": "n12",
+        "from_name": "Node 1 Galley",
+        "to_id": "n4",
+        "to_name": "PMM Stowage & Logistics",
+        "reason": "Away from the ignition sources; no ignition or oxygen source there",
+        "points": 0.8
+      },
+      {
+        "item_id": "n25",
+        "item": "Cotton towels",
+        "qty": 2,
+        "from_id": "n26",
+        "from_name": "Node 3 Hygiene & Exercise",
+        "to_id": "n4",
+        "to_name": "PMM Stowage & Logistics",
+        "reason": "Away from the ignition sources; no ignition or oxygen source there",
+        "points": 0.8
+      },
+      {
+        "item_id": "n10",
+        "item": "Alcohol wipes",
+        "qty": 4,
+        "from_id": "n12",
+        "from_name": "Node 1 Galley",
+        "to_id": "n4",
+        "to_name": "PMM Stowage & Logistics",
+        "reason": "Away from the ignition sources; no ignition or oxygen source there",
+        "points": 0.3
+      }
+    ],
     "data_gaps": [
-      "Cotton towels: no NASA test data; score is an estimate",
-      "Polyurethane foam: no NASA test data; score is an estimate",
-      "Acrylic panels: no tests within 3% of 34% oxygen",
+      "Cargo transfer bag: no NASA test data; score is an estimate",
+      "Cotton clothing: no NASA test data; score is an estimate",
       "No partial-gravity combustion data yet; scores use microgravity tests.",
-      "Nomex-bagged clothing: never tested above 22.1% oxygen"
+      "Polyurethane foam: no NASA test data; score is an estimate",
+      "Packaged food: no NASA test data; score is an estimate",
+      "Alcohol wipes: no NASA test data; score is an estimate",
+      "PMMA: no tests within 3% of 30% oxygen",
+      "Nomex-bagged soft goods: no NASA test data; score is an estimate",
+      "Cotton towels: no NASA test data; score is an estimate",
+      "PTFE-insulated wire harness: no NASA test data; score is an estimate",
+      "Not in the score yet: cabin pressure, EVA-prep periods, machinery heat and Li-ion bagging. They are shown for context only."
     ],
     "text_source": "template",
-    "disclaimer": "Planning aid based on NASA microgravity experiments. Not a safety certification."
+    "input_hash": "e5dbb749dd45dfbf",
+    "assessed_at": "2026-11-14T23:29:44+00:00",
+    "disclaimer": "Research aid based on NASA microgravity experiments. Not a safety certification."
+  },
+  "POST /api/chat request (assessment_input = the /api/assess request)": {
+    "tab": "overall",
+    "messages": [
+      {
+        "role": "user",
+        "text": "What single change lowers the score most?"
+      }
+    ],
+    "assessment_input": "<same JSON as POST /api/assess request>"
+  },
+  "POST /api/chat response": {
+    "reply": "Swap the polyurethane foam in Quest Airlock for melamine foam first: it sits beside the oxygen outlet.",
+    "actions": [
+      {
+        "type": "swap",
+        "room_id": "n7",
+        "item_id": "n6",
+        "to": "melamine",
+        "key": null,
+        "from_id": null,
+        "to_id": null,
+        "label": "Swap Polyurethane foam → Melamine foam",
+        "points": 1.4
+      }
+    ],
+    "text_source": "ai"
   },
   "GET /health": {
     "status": "ok",

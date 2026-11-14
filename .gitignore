@@ -26,3 +26,6 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Assessment log (written by POST /api/assess)
+data/assessments.jsonl
