@@ -1,0 +1,44 @@
+[
+  {
+    "id": "demo_cabin",
+    "module": "Demo cabin",
+    "crew_access": 5,
+    "pre_cleared": false,
+    "neighbors": [],
+    "conditions": {
+      "cruise": {
+        "oxygen_pct": 21,
+        "pressure_psi": 14.7,
+        "airflow_cm_s": 10,
+        "gravity_g": 0
+      },
+      "surface": {
+        "oxygen_pct": 34,
+        "pressure_psi": 8.2,
+        "airflow_cm_s": 10,
+        "gravity_g": 0.165
+      }
+    }
+  },
+  {
+    "id": "demo_locker",
+    "module": "Demo locker",
+    "crew_access": 3,
+    "pre_cleared": false,
+    "neighbors": [],
+    "conditions": {
+      "cruise": {
+        "oxygen_pct": 21,
+        "pressure_psi": 14.7,
+        "airflow_cm_s": 10,
+        "gravity_g": 0
+      },
+      "surface": {
+        "oxygen_pct": 34,
+        "pressure_psi": 8.2,
+        "airflow_cm_s": 10,
+        "gravity_g": 0.165
+      }
+    }
+  }
+]

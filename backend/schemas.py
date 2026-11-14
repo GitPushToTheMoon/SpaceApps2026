@@ -133,3 +133,72 @@ class Health(BaseModel):
 class ErrorResponse(BaseModel):
     """FastAPI's default error shape: {"detail": "..."}"""
     detail: str
+
+
+# Placement ratings are microgravity evidence screens, not gravity validation.
+class PlacementConditions(BaseModel):
+    oxygen_pct: float = Field(..., ge=0, le=100, allow_inf_nan=False)
+    pressure_psi: float = Field(..., gt=0, le=50, allow_inf_nan=False)
+    airflow_cm_s: float = Field(..., ge=0, le=500, allow_inf_nan=False)
+    gravity_g: float = Field(..., ge=0, le=1.5, allow_inf_nan=False)
+
+
+class PlacementPhases(BaseModel):
+    model_config = {"extra": "forbid"}
+    cruise: Optional[PlacementConditions] = None
+    surface: Optional[PlacementConditions] = None
+
+
+class PlacementNeighbor(BaseModel):
+    name: str
+    hazard: str = "not reported"
+
+
+class PlacementLocation(BaseModel):
+    id: str
+    module: str
+    crew_access: int = Field(..., ge=0, le=5)
+    pre_cleared: bool = False
+    neighbors: List[PlacementNeighbor] = Field(default_factory=list)
+    conditions: PlacementPhases = Field(default_factory=PlacementPhases)
+
+
+class PlacementItem(BaseModel):
+    name: str = Field(..., min_length=1)
+    materials: List[str] = Field(..., min_length=1)
+    notes: str = ""
+
+
+class PlacementRequest(BaseModel):
+    item: PlacementItem
+    current_location_id: str
+    destination: Literal["lunar", "mars"] = "lunar"
+    locations: Optional[List[PlacementLocation]] = Field(None, min_length=1)
+    pre_cleared_only: bool = False
+
+
+class PlacementRating(BaseModel):
+    risk: RiskLevel
+    reason: str
+
+
+class RatedPlacementLocation(PlacementLocation):
+    ratings: dict[str, PlacementRating]
+
+
+class PlacementOption(BaseModel):
+    type: Literal["move", "separate", "contain", "swap_material"]
+    location_id: Optional[str] = None
+    action: str
+    why: str
+
+
+class PlacementResponse(BaseModel):
+    overall: RiskLevel
+    summary: str
+    options: List[PlacementOption]
+    recommended: Optional[int] = None
+    locations: List[RatedPlacementLocation]
+    evidence: List[Evidence]
+    data_gaps: List[str]
+    disclaimer: str = DISCLAIMER

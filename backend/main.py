@@ -12,9 +12,11 @@ from fastapi import FastAPI, Header, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 
-from . import ai, data, matching, risk
+from . import ai, data, matching, risk, planner
 from .schemas import (AssessRequest, AssessResponse, Evidence, Experiment, Health,
                       Material, Preset)
+
+from .planner_schemas import PlannerRequest, PlannerResponse
 
 app = FastAPI(
     title="Flame in Freefall API",
@@ -181,3 +183,23 @@ def reload_data(x_admin_token: Optional[str] = Header(None)):
     data.reload()
     _assess_cached.cache_clear()
     return {"status": "reloaded", "experiments": data.experiment_count()}
+
+# Placement contract is separate from the existing assessment API.
+from . import placement
+from .schemas import PlacementRequest, PlacementResponse, PlacementLocation
+
+
+@app.get("/locations", response_model=List[PlacementLocation])
+def locations():
+    return placement.load_locations()
+
+
+@app.post("/placement", response_model=PlacementResponse)
+def placement_advice(req: PlacementRequest):
+    return placement.evaluate(req)
+
+
+@app.post("/planner/assess", response_model=PlannerResponse)
+def planner_assessment(req: PlannerRequest):
+    """Score cruise/surface inventory using CSV evidence and explicit prototype weights."""
+    return planner.evaluate(req)
