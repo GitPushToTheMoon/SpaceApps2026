@@ -1,22 +1,116 @@
 """One-time pipeline: AI summaries for every verified experiment -> data/analysis.json
 
 Run from the repo root:  python -m backend.analyze
-Run again whenever the data team adds verified rows.
 """
 
+import argparse
+import json
+import math
+import os
+import time
+from pathlib import Path
+from typing import Dict
 
-def main():
-    # TODO:
-    # 1. Load verified experiments (data.load_experiments)
-    # 2. Load existing analysis.json so already-done experiments are skipped
-    # 3. For each experiment not yet analyzed:
-    #    - send its row (minus source_quote/verified) through ai.ANALYZE_PROMPT
-    #    - store the result under its id
-    #    - save analysis.json after EACH one, so a crash doesn't lose progress
-    #    - if one fails, print it and move on (re-running retries it)
-    #    - short sleep between calls to stay under rate limits
-    # 4. Print how many experiments are analyzed
-    pass
+import pandas as pd
+from pydantic import ValidationError
+
+from . import ai
+from .schemas import Analysis
+
+DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+EXPERIMENTS_CSV = DATA_DIR / "experiments.csv"
+ANALYSIS_JSON = DATA_DIR / "analysis.json"
+
+ALLOWED_ENVIRONMENTS = {
+    "spacecraft", "space station", "lunar base", "mars base", "pressurized rover", "earth",
+}
+ALLOWED_CATEGORIES = {"prevention", "detection", "suppression", "other"}
+PAUSE_S = float(os.environ.get("ANALYZE_PAUSE_S", "1.0"))  # between calls, for rate limits
+
+
+def load_verified() -> pd.DataFrame:
+    df = pd.read_csv(EXPERIMENTS_CSV, dtype={"id": str})
+    verified = df["verified"].astype(str).str.strip().str.lower() == "yes"
+    return df[verified].reset_index(drop=True)
+
+
+def load_existing() -> Dict[str, dict]:
+    if ANALYSIS_JSON.exists():
+        return json.loads(ANALYSIS_JSON.read_text())
+    return {}
+
+
+def save(results: Dict[str, dict]) -> None:
+    # write to a temp file first, then swap, so a crash never leaves a half-written file
+    tmp = ANALYSIS_JSON.with_suffix(".json.tmp")
+    tmp.write_text(json.dumps(results, indent=2, ensure_ascii=False))
+    tmp.replace(ANALYSIS_JSON)
+
+
+def clean_row(row: pd.Series) -> dict:
+    return {k: (None if isinstance(v, float) and math.isnan(v) else v) for k, v in row.items()}
+
+
+def tidy(raw: dict) -> dict:
+    """Keep only allowed values and check the shape against schemas.Analysis."""
+    raw = dict(raw)
+    raw["environments"] = [e for e in raw.get("environments") or [] if e in ALLOWED_ENVIRONMENTS]
+    if raw.get("category") not in ALLOWED_CATEGORIES:
+        raw["category"] = "other"
+    score = raw.get("fire_safety_relevance")
+    if isinstance(score, (int, float)):
+        raw["fire_safety_relevance"] = max(1, min(10, int(round(score))))
+    raw["key_findings"] = list(raw.get("key_findings") or [])[:3]
+    return Analysis(**raw).model_dump()  # raises ValidationError if still malformed
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Generate AI summaries into data/analysis.json")
+    parser.add_argument("--redo", action="store_true", help="re-analyze experiments already done")
+    parser.add_argument("--limit", type=int, help="only analyze this many (for testing)")
+    parser.add_argument("--ids", nargs="+", help="only analyze these experiment ids")
+    args = parser.parse_args()
+
+    df = load_verified()
+    results = load_existing()
+
+    todo = df
+    if args.ids:
+        todo = todo[todo["id"].isin(args.ids)]
+    if not args.redo:
+        todo = todo[~todo["id"].isin(results.keys())]
+    if args.limit:
+        todo = todo.head(args.limit)
+
+    print(f"{len(df)} verified experiments, {len(results)} already analyzed, {len(todo)} to do "
+          f"(model: {ai.MODEL}{', fallback: ' + ai.FALLBACK_MODEL if ai.FALLBACK_MODEL else ''})")
+
+    done = failed = 0
+    start = time.time()
+    try:
+        for i, (_, row) in enumerate(todo.iterrows(), 1):
+            exp_id = row["id"]
+            try:
+                results[exp_id] = tidy(ai.analyze_experiment(clean_row(row)))
+                save(results)
+                done += 1
+                print(f"[{i}/{len(todo)}] {exp_id}  relevance={results[exp_id]['fire_safety_relevance']}")
+            except ai.AIUnavailable as e:
+                failed += 1
+                print(f"[{i}/{len(todo)}] {exp_id}  SKIPPED, Gemini unavailable: {e}")
+            except (ValidationError, ValueError, TypeError) as e:
+                failed += 1
+                print(f"[{i}/{len(todo)}] {exp_id}  SKIPPED, bad AI output: {e}")
+            if i < len(todo):
+                time.sleep(PAUSE_S)
+    except KeyboardInterrupt:
+        print("\nStopped. Progress so far is saved; re-run to continue.")
+
+    mins = (time.time() - start) / 60
+    print(f"\nDone: {done} analyzed, {failed} skipped, {len(results)} total in {ANALYSIS_JSON.name} "
+          f"({mins:.1f} min)")
+    if failed:
+        print("Re-run the same command to retry the skipped ones.")
 
 
 if __name__ == "__main__":
