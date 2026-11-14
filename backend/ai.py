@@ -21,6 +21,11 @@ load_dotenv()
 MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
 FALLBACK_MODEL = os.environ.get("GEMINI_FALLBACK_MODEL") or None
 USE_VERTEX = os.environ.get("USE_VERTEX", "").lower() in ("1", "true", "yes")
+# Optional: limit "thinking" so answers come back faster (fewer 504 timeouts).
+#   GEMINI_THINKING_LEVEL=low       (newer models: "low"/"medium"/"high"/"minimal")
+#   GEMINI_THINKING_BUDGET=0        (older 2.5 models: token budget, 0 = off)
+THINKING_LEVEL = os.environ.get("GEMINI_THINKING_LEVEL") or None
+THINKING_BUDGET = os.environ.get("GEMINI_THINKING_BUDGET")
 
 RETRYABLE = {429, 500, 503, 504}   # rate limit / overloaded / temporary server errors
 MAX_ATTEMPTS = 4                   # per model
@@ -53,6 +58,14 @@ def client():
     return _client
 
 
+def _thinking_config() -> Optional[types.ThinkingConfig]:
+    if THINKING_LEVEL:
+        return types.ThinkingConfig(thinking_level=THINKING_LEVEL)
+    if THINKING_BUDGET not in (None, ""):
+        return types.ThinkingConfig(thinking_budget=int(THINKING_BUDGET))
+    return None
+
+
 def _call(model: str, prompt: str) -> dict:
     resp = client().models.generate_content(
         model=model,
@@ -60,9 +73,12 @@ def _call(model: str, prompt: str) -> dict:
         config=types.GenerateContentConfig(
             response_mime_type="application/json",
             temperature=0.2,
+            thinking_config=_thinking_config(),
         ),
     )
-    text = (resp.text or "").strip()
+    # read only the text parts (skips hidden "thought_signature" parts, no warning)
+    parts = resp.candidates[0].content.parts if resp.candidates and resp.candidates[0].content else []
+    text = "".join(p.text for p in (parts or []) if getattr(p, "text", None)).strip()
     if not text:
         raise ValueError("Empty response from Gemini")
     return json.loads(text)
@@ -81,33 +97,57 @@ def ask_json(prompt: str) -> dict:
                 last_error = e
                 if e.code not in RETRYABLE:
                     raise  # bad key, bad request, etc. -- retrying won't help
+                print(f"[ai] {model} attempt {attempt + 1}/{MAX_ATTEMPTS}: {e.code} {e.status}, retrying...")
             except (json.JSONDecodeError, ValueError) as e:
                 last_error = e  # model returned bad JSON; try again
             if attempt < MAX_ATTEMPTS - 1:
                 time.sleep(BASE_DELAY_S * (2 ** attempt))
         print(f"[ai] {model} failed after {MAX_ATTEMPTS} attempts: {last_error}")
 
-    raise AIUnavailable(f"Gemini unavailable: {last_error}")
+    raise AIUnavailable(str(last_error))
 
 
 # ---------------------------------------------------------------- prompts
 
 ANALYZE_PROMPT = """You are helping build a fire-safety research dashboard from NASA
 microgravity combustion experiments. Use ONLY the experiment data below.
-Do not invent numbers. If something is not in the data, say "not reported".
+Do not invent numbers or outcomes. Do not overstate results: if the data says
+"burn time 70 s", do not call it a complete burn. If something is not in the
+data, say "not reported".
 
 Experiment data:
 {row}
 
 Return JSON with exactly these keys:
-- "summary": 2-3 sentence plain-English summary of what was tested and what happened
-- "fire_safety_relevance": integer 1-10 (how useful for fire safety in crewed habitats:
-   spacecraft cabins, space stations, Moon/Mars habitats, pressurized rovers)
-- "relevance_reason": one sentence explaining the score
-- "environments": list chosen from ["spacecraft", "space station", "lunar base",
-   "mars base", "pressurized rover", "earth"]
-- "category": one of ["prevention", "detection", "suppression", "other"]
-- "key_findings": list of up to 3 short findings, each grounded in the data above
+
+- "summary": 2-3 plain-English sentences: what was tested, under what conditions,
+  and what happened.
+
+- "fire_safety_relevance": integer 1-10, using this scale so scores spread out:
+    9-10: real cabin materials (fabrics, plastics) burning or failing to burn at
+          21% oxygen or higher, or results directly about putting fires out
+          (suppression) or detecting them
+    6-8:  useful related evidence: materials at lower oxygen, small samples,
+          liquid or gas fuels with a clear finding about flammability limits,
+          extinction or suppression (e.g. CO2 or helium added)
+    3-5:  mostly basic combustion science with only an indirect link to crew safety
+    1-2:  little or no fire-safety value (e.g. outcome not reported)
+
+- "relevance_reason": one sentence explaining the score.
+
+- "environments": always include "spacecraft" and "space station" (all tests are
+  in microgravity). Add "lunar base", "mars base" and "pressurized rover" ONLY if
+  the oxygen is 25% or higher or pressure is below 12 psi (planned habitat
+  atmospheres are lower pressure and higher oxygen). Add "earth" only if the result
+  clearly matters for fire safety on Earth too.
+
+- "category": exactly one of:
+    "prevention"  - flammability / material / ignition tests
+    "suppression" - extinguishment, diluent gases (CO2, helium), flame going out
+    "detection"   - smoke, sensors, early warning
+    "other"       - none of the above
+
+- "key_findings": up to 3 short findings, each stated in the data above.
 """
 
 RISK_PROMPT = """You are a fire-safety research assistant. A user describes habitat
@@ -116,25 +156,39 @@ conditions. Below are the closest NASA microgravity combustion experiments
 
 Rules:
 - Base everything ONLY on these experiments. Cite them by id, e.g. (PSI-69-019).
-- Do not invent numbers or outcomes. If the experiments don't cover the user's
-  conditions (oxygen, pressure, airflow or material), say so and use
-  risk_level "insufficient data".
-- Higher oxygen generally increases flammability; only claim this for the user's
-  conditions if the cited experiments support it.
+- Compare numbers directly: state the user's oxygen, pressure and airflow next to
+  the tested values (e.g. "tested at 22% oxygen; you asked about 34%").
+- NEVER say the user's conditions fall within the tested range unless match_distance
+  is 0 for that experiment. The facts below were computed by code and are correct;
+  do not contradict them.
+- Describe outcomes exactly as the data states them. "Burned for 600 s" or
+  "burned ~10 cm" is not "completely consumed"; only say complete/consumed if the
+  outcome says so.
+- If the user's conditions are outside what was tested, say what the closest
+  evidence suggests (e.g. "it already burned at lower oxygen") and that higher
+  oxygen generally increases flammability, but that this exact case is untested.
+- risk_level guide: "high" if the closest relevant tests burned/spread at the same
+  or less severe conditions; "elevated" if they burned at milder conditions but the
+  user's case is untested or mixed; "low" only if tests at the same or harsher
+  conditions self-extinguished or did not ignite; "insufficient data" if there is no
+  relevant evidence for the material or conditions.
 - {gravity_note}
 - This is a research aid, not a safety certification.
 
 User conditions:
 {conditions}
 
+Facts already computed by code (shown to the user separately; do not repeat them in data_gaps):
+{known_gaps}
+
 Matching experiments (closest first; match_distance 0 = conditions fall inside that test's ranges):
 {experiments}
 
 Return JSON with exactly these keys:
 - "risk_level": one of ["low", "elevated", "high", "insufficient data"]
-- "explanation": 3-5 plain-English sentences citing experiment ids
-- "evidence": list of {{"id": "<experiment id>", "what_happened": "<one sentence>"}}
-- "data_gaps": list of short strings describing what the data does not cover
+- "explanation": 3-5 plain-English sentences citing experiment ids and comparing numbers
+- "evidence": list of {{"id": "<experiment id>", "what_happened": "<one sentence, as stated in the data>"}}
+- "data_gaps": list of ADDITIONAL short gaps not already in the facts above (can be empty)
 """
 
 # Fields the AI sees. source_quote / verified stay internal.
@@ -161,13 +215,15 @@ def analyze_experiment(row: Dict) -> dict:
     return ask_json(ANALYZE_PROMPT.format(row=json.dumps(_clean(row), indent=2, default=str)))
 
 
-def assess(conditions: Dict, matched_experiments: List[Dict]) -> dict:
-    """Used by POST /assess: user conditions + matched experiments -> risk JSON."""
+def assess(conditions: Dict, matched_experiments: List[Dict],
+           known_gaps: Optional[List[str]] = None) -> dict:
+    """Used by POST /assess: user conditions + matched experiments -> risk JSON.
+    known_gaps: data gaps computed by matching.coverage_gaps (treated as facts)."""
     gravity = float(conditions.get("gravity_g") or 0)
     if gravity > 0:
         gravity_note = (
             f"The user's habitat has {gravity} g gravity. All experiments are microgravity; "
-            "there is no partial-gravity combustion data yet. Say so in data_gaps."
+            "there is no partial-gravity combustion data yet (already listed in the facts)."
         )
     else:
         gravity_note = "The user's habitat is in microgravity, like the experiments."
@@ -175,6 +231,7 @@ def assess(conditions: Dict, matched_experiments: List[Dict]) -> dict:
     prompt = RISK_PROMPT.format(
         gravity_note=gravity_note,
         conditions=json.dumps(conditions, indent=2),
+        known_gaps="\n".join(f"- {g}" for g in (known_gaps or [])) or "- (none)",
         experiments=json.dumps([_clean(e) for e in matched_experiments], indent=2, default=str),
     )
     return ask_json(prompt)
