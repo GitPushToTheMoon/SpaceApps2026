@@ -299,7 +299,8 @@ def score_room(space: dict, oxygen_pct: float, gravity_g: float = 0.0,
 # ------------------------------------------------------------------ 3-4. ship + overall
 
 def score_ship(spaces: List[dict], oxygen_pct: float, gravity_g: float = 0.0) -> dict:
-    """All spaces at one phase. Neighbors are spaces whose positions touch (prototype x/y grid)."""
+    """All spaces at one phase. Neighbors come from each space's "neighbours" id list
+    (planner JSON) or, if a space has none, from touching x/y grid positions."""
     def pos(s):
         p = s.get("position") or {}
         return _num(p.get("x")), _num(p.get("y"))
@@ -307,11 +308,15 @@ def score_ship(spaces: List[dict], oxygen_pct: float, gravity_g: float = 0.0) ->
     def has_ignition(s):
         return any(it.get("ignition_source") for it in s.get("items") or [])
 
+    by_id = {s.get("id"): s for s in spaces if s.get("id") is not None}
     rooms = []
     for s in spaces:
         x, y = pos(s)
         neighbor_ign = False
-        if x is not None and y is not None:
+        if s.get("neighbours") is not None:
+            neighbor_ign = any(n in by_id and by_id[n] is not s and has_ignition(by_id[n])
+                               for n in s["neighbours"])
+        elif x is not None and y is not None:
             for other in spaces:
                 ox, oy = pos(other)
                 if other is not s and ox is not None and oy is not None \

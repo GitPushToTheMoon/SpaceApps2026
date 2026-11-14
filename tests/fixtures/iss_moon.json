@@ -1,0 +1,476 @@
+{
+ "conditions": {
+  "cruise": {
+   "gravity_g": 0,
+   "pressure_psia": 14.7,
+   "o2_percent": 21,
+   "ventilation": "normal",
+   "cruise_days": 180
+  },
+  "surface": {
+   "body": "Moon",
+   "gravity_g": 0.166,
+   "pressure_psia": 10.2,
+   "o2_percent": 30,
+   "stay_days": 30,
+   "eva_prep_periods_high_o2": 4
+  }
+ },
+ "out_of_scope": [
+  "launch"
+ ],
+ "spaces": [
+  {
+   "id": "n4",
+   "name": "PMM Stowage & Logistics",
+   "type": "Stowage",
+   "passage": false,
+   "airflow_cm_s": 3,
+   "capacity_kg": 140,
+   "neighbours": [
+    "n12"
+   ],
+   "items": [
+    {
+     "id": "n1",
+     "key": "ctb",
+     "name": "Cargo transfer bag",
+     "category": "material",
+     "flammability": "Moderate",
+     "ignition_source": false,
+     "oxygen_source": false,
+     "qty": 1,
+     "cm": [
+      50,
+      42,
+      25
+     ],
+     "swap_to": "nomexbag"
+    },
+    {
+     "id": "n2",
+     "key": "cotton",
+     "name": "Cotton clothing",
+     "category": "material",
+     "flammability": "High",
+     "ignition_source": false,
+     "oxygen_source": false,
+     "qty": 2,
+     "cm": [
+      30,
+      20,
+      5
+     ],
+     "swap_to": "nomexbag"
+    },
+    {
+     "id": "n3",
+     "key": "det",
+     "name": "Smoke detector",
+     "category": "safety",
+     "flammability": null,
+     "ignition_source": false,
+     "oxygen_source": false,
+     "qty": 1,
+     "cm": [
+      10,
+      10,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "id": "n7",
+   "name": "Quest Airlock",
+   "type": "Airlock",
+   "passage": false,
+   "airflow_cm_s": 10,
+   "capacity_kg": 40,
+   "neighbours": [
+    "n12"
+   ],
+   "items": [
+    {
+     "id": "n5",
+     "key": "oxygen",
+     "name": "Oxygen supply",
+     "category": "machinery",
+     "flammability": null,
+     "ignition_source": false,
+     "oxygen_source": true,
+     "qty": 1,
+     "cm": [
+      60,
+      30,
+      30
+     ]
+    },
+    {
+     "id": "n6",
+     "key": "foam",
+     "name": "Polyurethane foam",
+     "category": "material",
+     "flammability": "High",
+     "ignition_source": false,
+     "oxygen_source": false,
+     "qty": 1,
+     "cm": [
+      40,
+      30,
+      4
+     ],
+     "swap_to": "melamine"
+    }
+   ]
+  },
+  {
+   "id": "n12",
+   "name": "Node 1 Galley",
+   "type": "Galley",
+   "passage": false,
+   "airflow_cm_s": 12,
+   "capacity_kg": 60,
+   "neighbours": [
+    "n4",
+    "n7",
+    "n18",
+    "n26"
+   ],
+   "items": [
+    {
+     "id": "n8",
+     "key": "warmer",
+     "name": "Food warmer",
+     "category": "machinery",
+     "flammability": null,
+     "ignition_source": true,
+     "oxygen_source": false,
+     "qty": 1,
+     "cm": [
+      40,
+      30,
+      25
+     ]
+    },
+    {
+     "id": "n9",
+     "key": "food",
+     "name": "Packaged food",
+     "category": "material",
+     "flammability": "Moderate",
+     "ignition_source": false,
+     "oxygen_source": false,
+     "qty": 6,
+     "cm": [
+      20,
+      15,
+      8
+     ]
+    },
+    {
+     "id": "n10",
+     "key": "wipes",
+     "name": "Alcohol wipes",
+     "category": "material",
+     "flammability": "High",
+     "ignition_source": false,
+     "oxygen_source": false,
+     "qty": 4,
+     "cm": [
+      15,
+      10,
+      6
+     ],
+     "swap_to": "canister"
+    },
+    {
+     "id": "n11",
+     "key": "ext",
+     "name": "Portable extinguisher",
+     "category": "safety",
+     "flammability": null,
+     "ignition_source": false,
+     "oxygen_source": false,
+     "qty": 1,
+     "cm": [
+      50,
+      15,
+      15
+     ]
+    }
+   ]
+  },
+  {
+   "id": "n18",
+   "name": "Destiny Lab",
+   "type": "Lab",
+   "passage": false,
+   "airflow_cm_s": 14,
+   "capacity_kg": 70,
+   "neighbours": [
+    "n12",
+    "n23"
+   ],
+   "items": [
+    {
+     "id": "n13",
+     "key": "printer",
+     "name": "3D printer",
+     "category": "machinery",
+     "flammability": null,
+     "ignition_source": true,
+     "oxygen_source": false,
+     "qty": 1,
+     "cm": [
+      45,
+      45,
+      40
+     ]
+    },
+    {
+     "id": "n14",
+     "key": "pmma",
+     "name": "PMMA",
+     "category": "material",
+     "flammability": "High",
+     "ignition_source": false,
+     "oxygen_source": false,
+     "qty": 3,
+     "cm": [
+      10,
+      8,
+      4
+     ],
+     "test_dataset": {
+      "state": "solid",
+      "tests": 27
+     }
+    },
+    {
+     "id": "n15",
+     "key": "laptop",
+     "name": "Laptop",
+     "category": "machinery",
+     "flammability": null,
+     "ignition_source": true,
+     "oxygen_source": false,
+     "qty": 2,
+     "cm": [
+      35,
+      25,
+      3
+     ]
+    },
+    {
+     "id": "n16",
+     "key": "ext",
+     "name": "Portable extinguisher",
+     "category": "safety",
+     "flammability": null,
+     "ignition_source": false,
+     "oxygen_source": false,
+     "qty": 1,
+     "cm": [
+      50,
+      15,
+      15
+     ]
+    },
+    {
+     "id": "n17",
+     "key": "det",
+     "name": "Smoke detector",
+     "category": "safety",
+     "flammability": null,
+     "ignition_source": false,
+     "oxygen_source": false,
+     "qty": 1,
+     "cm": [
+      10,
+      10,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "id": "n23",
+   "name": "Node 2 Crew Quarters",
+   "type": "Crew quarters",
+   "passage": false,
+   "airflow_cm_s": 8,
+   "capacity_kg": 50,
+   "neighbours": [
+    "n18",
+    "n30"
+   ],
+   "items": [
+    {
+     "id": "n19",
+     "key": "nomexbag",
+     "name": "Nomex-bagged soft goods",
+     "category": "material",
+     "flammability": "Low",
+     "ignition_source": false,
+     "oxygen_source": false,
+     "qty": 4,
+     "cm": [
+      30,
+      20,
+      5
+     ]
+    },
+    {
+     "id": "n20",
+     "key": "laptop",
+     "name": "Laptop",
+     "category": "machinery",
+     "flammability": null,
+     "ignition_source": true,
+     "oxygen_source": false,
+     "qty": 1,
+     "cm": [
+      35,
+      25,
+      3
+     ]
+    },
+    {
+     "id": "n21",
+     "key": "liion",
+     "name": "Li-ion battery pack",
+     "category": "machinery",
+     "flammability": null,
+     "ignition_source": true,
+     "oxygen_source": false,
+     "qty": 1,
+     "cm": [
+      20,
+      10,
+      8
+     ],
+     "bagged": false,
+     "swap_to": "liionbag"
+    },
+    {
+     "id": "n22",
+     "key": "det",
+     "name": "Smoke detector",
+     "category": "safety",
+     "flammability": null,
+     "ignition_source": false,
+     "oxygen_source": false,
+     "qty": 1,
+     "cm": [
+      10,
+      10,
+      5
+     ]
+    }
+   ]
+  },
+  {
+   "id": "n26",
+   "name": "Node 3 Hygiene & Exercise",
+   "type": "Hygiene",
+   "passage": false,
+   "airflow_cm_s": 16,
+   "capacity_kg": 45,
+   "neighbours": [
+    "n12"
+   ],
+   "items": [
+    {
+     "id": "n24",
+     "key": "exercise",
+     "name": "Motorised exercise device",
+     "category": "machinery",
+     "flammability": null,
+     "ignition_source": true,
+     "oxygen_source": false,
+     "qty": 1,
+     "cm": [
+      120,
+      60,
+      50
+     ]
+    },
+    {
+     "id": "n25",
+     "key": "towels",
+     "name": "Cotton towels",
+     "category": "material",
+     "flammability": "High",
+     "ignition_source": false,
+     "oxygen_source": false,
+     "qty": 2,
+     "cm": [
+      40,
+      30,
+      1
+     ],
+     "swap_to": "nomexbag"
+    }
+   ]
+  },
+  {
+   "id": "n30",
+   "name": "Columbus Lab",
+   "type": "Lab",
+   "passage": false,
+   "airflow_cm_s": 14,
+   "capacity_kg": 70,
+   "neighbours": [
+    "n23"
+   ],
+   "items": [
+    {
+     "id": "n27",
+     "key": "ptfe",
+     "name": "PTFE-insulated wire harness",
+     "category": "material",
+     "flammability": "Low",
+     "ignition_source": false,
+     "oxygen_source": false,
+     "qty": 3,
+     "cm": [
+      100,
+      5,
+      5
+     ]
+    },
+    {
+     "id": "n28",
+     "key": "laptop",
+     "name": "Laptop",
+     "category": "machinery",
+     "flammability": null,
+     "ignition_source": true,
+     "oxygen_source": false,
+     "qty": 1,
+     "cm": [
+      35,
+      25,
+      3
+     ]
+    },
+    {
+     "id": "n29",
+     "key": "det",
+     "name": "Smoke detector",
+     "category": "safety",
+     "flammability": null,
+     "ignition_source": false,
+     "oxygen_source": false,
+     "qty": 1,
+     "cm": [
+      10,
+      10,
+      5
+     ]
+    }
+   ]
+  }
+ ]
+}

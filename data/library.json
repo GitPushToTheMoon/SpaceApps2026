@@ -1,0 +1,482 @@
+[
+ {
+  "key": "cotton",
+  "name": "Cotton clothing",
+  "category": "material",
+  "flammability": "High",
+  "ignition_source": false,
+  "oxygen_source": false,
+  "soft_goods": true,
+  "swap": "nomexbag",
+  "material_key": null
+ },
+ {
+  "key": "towels",
+  "name": "Cotton towels",
+  "category": "material",
+  "flammability": "High",
+  "ignition_source": false,
+  "oxygen_source": false,
+  "soft_goods": true,
+  "swap": "nomexbag",
+  "material_key": null
+ },
+ {
+  "key": "manuals",
+  "name": "Paper manuals",
+  "category": "material",
+  "flammability": "High",
+  "ignition_source": false,
+  "oxygen_source": false,
+  "soft_goods": true,
+  "swap": "nomexbag",
+  "material_key": null
+ },
+ {
+  "key": "foam",
+  "name": "Polyurethane foam",
+  "category": "material",
+  "flammability": "High",
+  "ignition_source": false,
+  "oxygen_source": false,
+  "swap": "melamine",
+  "material_key": null
+ },
+ {
+  "key": "wipes",
+  "name": "Alcohol wipes",
+  "category": "material",
+  "flammability": "High",
+  "ignition_source": false,
+  "oxygen_source": false,
+  "swap": "canister",
+  "material_key": null
+ },
+ {
+  "key": "pebags",
+  "name": "Polyethylene bags",
+  "category": "material",
+  "flammability": "Moderate",
+  "ignition_source": false,
+  "oxygen_source": false,
+  "swap": "frfilm",
+  "material_key": null
+ },
+ {
+  "key": "velcro",
+  "name": "Hook-and-loop patches",
+  "category": "material",
+  "flammability": "Moderate",
+  "ignition_source": false,
+  "oxygen_source": false,
+  "swap": "covered",
+  "material_key": null
+ },
+ {
+  "key": "food",
+  "name": "Packaged food",
+  "category": "material",
+  "flammability": "Moderate",
+  "ignition_source": false,
+  "oxygen_source": false,
+  "material_key": null
+ },
+ {
+  "key": "pvc",
+  "name": "PVC-insulated wire harness",
+  "category": "material",
+  "flammability": "Moderate",
+  "ignition_source": false,
+  "oxygen_source": false,
+  "swap": "ptfe",
+  "material_key": null
+ },
+ {
+  "key": "lube",
+  "name": "Lubricant oil",
+  "category": "material",
+  "flammability": "Moderate",
+  "ignition_source": false,
+  "oxygen_source": false,
+  "material_key": null
+ },
+ {
+  "key": "ctb",
+  "name": "Cargo transfer bag",
+  "category": "material",
+  "flammability": "Moderate",
+  "ignition_source": false,
+  "oxygen_source": false,
+  "soft_goods": true,
+  "swap": "nomexbag",
+  "material_key": null
+ },
+ {
+  "key": "nomexbag",
+  "name": "Nomex-bagged soft goods",
+  "category": "material",
+  "flammability": "Low",
+  "ignition_source": false,
+  "oxygen_source": false,
+  "material_key": null
+ },
+ {
+  "key": "melamine",
+  "name": "Melamine foam",
+  "category": "material",
+  "flammability": "Low",
+  "ignition_source": false,
+  "oxygen_source": false,
+  "material_key": null
+ },
+ {
+  "key": "canister",
+  "name": "Wipes in sealed canister",
+  "category": "material",
+  "flammability": "Low",
+  "ignition_source": false,
+  "oxygen_source": false,
+  "material_key": null
+ },
+ {
+  "key": "frfilm",
+  "name": "Fire-retardant film bags",
+  "category": "material",
+  "flammability": "Low",
+  "ignition_source": false,
+  "oxygen_source": false,
+  "material_key": null
+ },
+ {
+  "key": "covered",
+  "name": "Covered hook-and-loop",
+  "category": "material",
+  "flammability": "Low",
+  "ignition_source": false,
+  "oxygen_source": false,
+  "material_key": null
+ },
+ {
+  "key": "ptfe",
+  "name": "PTFE-insulated wire harness",
+  "category": "material",
+  "flammability": "Low",
+  "ignition_source": false,
+  "oxygen_source": false,
+  "material_key": null
+ },
+ {
+  "key": "methanol",
+  "name": "methanol",
+  "category": "material",
+  "flammability": "High",
+  "ignition_source": false,
+  "oxygen_source": false,
+  "material_key": "methanol",
+  "test_dataset": {
+   "plain": "Liquid fuel droplet",
+   "state": "liquid",
+   "tests": 157
+  }
+ },
+ {
+  "key": "heptane",
+  "name": "heptane",
+  "category": "material",
+  "flammability": "High",
+  "ignition_source": false,
+  "oxygen_source": false,
+  "material_key": "heptane",
+  "test_dataset": {
+   "plain": "Liquid fuel droplet",
+   "state": "liquid",
+   "tests": 117
+  }
+ },
+ {
+  "key": "pmma",
+  "name": "PMMA",
+  "category": "material",
+  "flammability": "High",
+  "ignition_source": false,
+  "oxygen_source": false,
+  "material_key": "PMMA",
+  "test_dataset": {
+   "plain": "Acrylic plastic",
+   "state": "solid",
+   "tests": 27
+  }
+ },
+ {
+  "key": "ethylene",
+  "name": "ethylene",
+  "category": "material",
+  "flammability": "High",
+  "ignition_source": false,
+  "oxygen_source": false,
+  "material_key": "ethylene",
+  "test_dataset": {
+   "plain": "Gas fuel",
+   "state": "gas",
+   "tests": 22
+  }
+ },
+ {
+  "key": "sibal",
+  "name": "SIBAL fabric",
+  "category": "material",
+  "flammability": "Moderate",
+  "ignition_source": false,
+  "oxygen_source": false,
+  "material_key": "SIBAL fabric",
+  "test_dataset": {
+   "plain": "75% cotton / 25% fiberglass cloth",
+   "state": "solid",
+   "tests": 6
+  }
+ },
+ {
+  "key": "methane",
+  "name": "methane",
+  "category": "material",
+  "flammability": "High",
+  "ignition_source": false,
+  "oxygen_source": false,
+  "material_key": "methane",
+  "test_dataset": {
+   "plain": "Gas fuel",
+   "state": "gas",
+   "tests": 5
+  }
+ },
+ {
+  "key": "silicone",
+  "name": "silicone",
+  "category": "material",
+  "flammability": "Low",
+  "ignition_source": false,
+  "oxygen_source": false,
+  "material_key": "silicone",
+  "test_dataset": {
+   "plain": "Silicone sheet",
+   "state": "solid",
+   "tests": 4
+  }
+ },
+ {
+  "key": "nomex",
+  "name": "Nomex",
+  "category": "material",
+  "flammability": "Low",
+  "ignition_source": false,
+  "oxygen_source": false,
+  "material_key": "Nomex",
+  "test_dataset": {
+   "plain": "Fire-resistant fabric (crew clothing)",
+   "state": "solid",
+   "tests": 1
+  }
+ },
+ {
+  "key": "cottonfab",
+  "name": "cotton fabric",
+  "category": "material",
+  "flammability": "High",
+  "ignition_source": false,
+  "oxygen_source": false,
+  "material_key": "cotton fabric",
+  "test_dataset": {
+   "plain": "Cotton jersey",
+   "state": "solid",
+   "tests": 0
+  }
+ },
+ {
+  "key": "ultem",
+  "name": "Ultem",
+  "category": "material",
+  "flammability": "Low",
+  "ignition_source": false,
+  "oxygen_source": false,
+  "material_key": "Ultem",
+  "test_dataset": {
+   "plain": "High-performance plastic",
+   "state": "solid",
+   "tests": 0
+  }
+ },
+ {
+  "key": "waxfg",
+  "name": "wax-fiberglass",
+  "category": "material",
+  "flammability": "High",
+  "ignition_source": false,
+  "oxygen_source": false,
+  "material_key": "wax-fiberglass",
+  "test_dataset": {
+   "plain": "Wax-soaked fiberglass fabric",
+   "state": "solid",
+   "tests": 0
+  }
+ },
+ {
+  "key": "hepiso",
+  "name": "heptane-isooctane",
+  "category": "material",
+  "flammability": "High",
+  "ignition_source": false,
+  "oxygen_source": false,
+  "material_key": "heptane-isooctane",
+  "test_dataset": {
+   "plain": "50/50 fuel mix (gasoline stand-in)",
+   "state": "liquid",
+   "tests": 0
+  }
+ },
+ {
+  "key": "liion",
+  "name": "Li-ion battery pack",
+  "category": "machinery",
+  "flammability": null,
+  "ignition_source": true,
+  "oxygen_source": false,
+  "material_key": null,
+  "heat": 25,
+  "li_ion": true,
+  "bagged": false,
+  "swap": "liionbag"
+ },
+ {
+  "key": "liionbag",
+  "name": "Li-ion battery pack (bagged)",
+  "category": "machinery",
+  "flammability": null,
+  "ignition_source": true,
+  "oxygen_source": false,
+  "material_key": null,
+  "heat": 25,
+  "li_ion": true,
+  "bagged": true
+ },
+ {
+  "key": "laptop",
+  "name": "Laptop",
+  "category": "machinery",
+  "flammability": null,
+  "ignition_source": true,
+  "oxygen_source": false,
+  "material_key": null,
+  "heat": 10
+ },
+ {
+  "key": "warmer",
+  "name": "Food warmer",
+  "category": "machinery",
+  "flammability": null,
+  "ignition_source": true,
+  "oxygen_source": false,
+  "material_key": null,
+  "heat": 30
+ },
+ {
+  "key": "printer",
+  "name": "3D printer",
+  "category": "machinery",
+  "flammability": null,
+  "ignition_source": true,
+  "oxygen_source": false,
+  "material_key": null,
+  "heat": 30
+ },
+ {
+  "key": "exercise",
+  "name": "Motorised exercise device",
+  "category": "machinery",
+  "flammability": null,
+  "ignition_source": true,
+  "oxygen_source": false,
+  "material_key": null,
+  "heat": 15
+ },
+ {
+  "key": "fan",
+  "name": "Air circulation fan",
+  "category": "machinery",
+  "flammability": null,
+  "ignition_source": true,
+  "oxygen_source": false,
+  "material_key": null,
+  "heat": 5
+ },
+ {
+  "key": "pump",
+  "name": "Propellant pump controller",
+  "category": "machinery",
+  "flammability": null,
+  "ignition_source": true,
+  "oxygen_source": false,
+  "material_key": null,
+  "heat": 20
+ },
+ {
+  "key": "consoles",
+  "name": "Flight control consoles",
+  "category": "machinery",
+  "flammability": null,
+  "ignition_source": true,
+  "oxygen_source": false,
+  "material_key": null,
+  "heat": 15
+ },
+ {
+  "key": "oxygen",
+  "name": "Oxygen supply",
+  "category": "machinery",
+  "flammability": null,
+  "ignition_source": false,
+  "oxygen_source": true,
+  "material_key": null
+ },
+ {
+  "key": "ext",
+  "name": "Portable extinguisher",
+  "category": "safety",
+  "flammability": null,
+  "ignition_source": false,
+  "oxygen_source": false,
+  "material_key": null,
+  "default_cm": [
+   50,
+   15,
+   15
+  ]
+ },
+ {
+  "key": "det",
+  "name": "Smoke detector",
+  "category": "safety",
+  "flammability": null,
+  "ignition_source": false,
+  "oxygen_source": false,
+  "material_key": null,
+  "default_cm": [
+   10,
+   10,
+   5
+  ]
+ },
+ {
+  "key": "mask",
+  "name": "Emergency breathing mask",
+  "category": "safety",
+  "flammability": null,
+  "ignition_source": false,
+  "oxygen_source": false,
+  "material_key": null,
+  "default_cm": [
+   25,
+   20,
+   15
+  ]
+ }
+]
