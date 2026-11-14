@@ -7,7 +7,7 @@ Conventions (keep these consistent):
 - lists are always lists, even when empty
 - fixed choices are lowercase strings
 
-If you change a field here, update API.md
+If you change a field here, update API.md and tell the frontend team.
 Python 3.9: use Optional[...] / List[...], not "X | None" or "list[X]".
 """
 from typing import Dict, List, Literal, Optional
