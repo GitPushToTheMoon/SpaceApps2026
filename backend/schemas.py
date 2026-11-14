@@ -2,67 +2,134 @@
 
 Use Pydantic models (class X(BaseModel)) so FastAPI validates input and
 documents everything automatically at /docs.
-If you change a field here, update API.md and tell the frontend team.
+update API.md and tell the frontend team if changes made
 """
-from pydantic import BaseModel
+from typing import List, Literal, Optional
 
+from pydantic import BaseModel, Field
+
+FuelType = Literal["solid", "liquid", "gas"]
+RiskLevel = Literal["low", "elevated", "high", "insufficient data"]
+OutcomeCategory = Literal[
+    "burned", "self-extinguished", "blowoff", "no ignition",
+    "no spread", "ignited", "other", "unknown",
+]
+Environment = Literal[
+    "spacecraft", "space station", "lunar base", "mars base", "pressurized rover", "earth",
+]
+Category = Literal["prevention", "detection", "suppression", "other"]
+
+DISCLAIMER = "Research aid based on NASA microgravity experiments. Not a safety certification."
+
+
+# ------------------------------------------------------------------ building blocks
 
 class Range(BaseModel):
-    # TODO: min and max, both optional floats (null when the source didn't report it)
-    pass
+    min: Optional[float] = None
+    max: Optional[float] = None
 
+
+class PresetValue(BaseModel):
+    default: float
+    min: float
+    max: float
+
+
+class Source(BaseModel):
+    title: str
+    url: str
+
+
+# ------------------------------------------------------------------ GET /materials
 
 class Material(BaseModel):
-    # TODO: one entry from data/materials.csv
-    #   material        - exact key, e.g. "PMMA" (what the frontend sends back)
-    #   display_name    - what users see, e.g. "Acrylic plastic (PMMA)"
-    #   fuel_type       - "solid" | "liquid" | "gas"
-    #   description
-    #   investigations  - list of strings
-    #   priority        - int, 1 = most relevant
-    pass
+    material: str = Field(..., description="Exact key the frontend sends back, e.g. 'PMMA'")
+    display_name: str = Field(..., description="What users see, e.g. 'Acrylic plastic (PMMA)'")
+    fuel_type: FuelType
+    description: str = ""
+    investigations: List[str] = []
+    priority: int = Field(..., description="1 = most relevant to cabin fire safety")
 
+
+# ------------------------------------------------------------------ GET /presets
+
+class Preset(BaseModel):
+    id: str = Field(..., examples=["moon_habitat"])
+    display_name: str
+    description: str
+    pressure_psi: PresetValue
+    oxygen_pct: PresetValue
+    airflow_cm_s: PresetValue
+    temperature_c: PresetValue = Field(..., description="Display only; not used in matching")
+    gravity_g: float = Field(..., description="0 = microgravity, 0.165 = Moon, 0.38 = Mars")
+    sources: List[Source] = []
+
+
+# ------------------------------------------------------------------ GET /experiments
 
 class Analysis(BaseModel):
-    # TODO: the AI-generated fields saved in data/analysis.json
-    #   summary, fire_safety_relevance (1-10), relevance_reason,
-    #   environments (list), category, key_findings (list)
-    pass
+    """AI-generated ahead of time by analyze.py."""
+    summary: str = ""
+    fire_safety_relevance: Optional[int] = Field(None, ge=1, le=10)
+    relevance_reason: str = ""
+    environments: List[str] = []
+    category: Optional[str] = None
+    key_findings: List[str] = []
 
 
 class Experiment(BaseModel):
-    # TODO: one row of experiments.csv, cleaned up for the frontend
-    #   id, name, investigation, fuel_type, material
-    #   oxygen_pct, pressure_psi, airflow_cm_s  -> each a Range
-    #   gravity, outcome, description, source_url
-    #   analysis -> Analysis or null if not analyzed yet
-    # Leave out source_quote and verified (internal only)
-    pass
+    id: str = Field(..., examples=["PSI-69-019"])
+    name: str
+    investigation: str
+    fuel_type: Optional[FuelType] = None
+    material: Optional[str] = None
+    oxygen_pct: Range
+    pressure_psi: Range
+    airflow_cm_s: Range
+    gravity: Optional[str] = None
+    outcome: Optional[str] = Field(None, description="Original wording from the source")
+    outcome_category: Optional[OutcomeCategory] = None
+    description: Optional[str] = None
+    source_url: Optional[str] = None
+    analysis: Optional[Analysis] = Field(None, description="null until analyze.py has run for it")
 
 
 class MatchedExperiment(Experiment):
-    # TODO: add match_distance (float, 0 = user's conditions fall inside this test's ranges)
-    pass
+    match_distance: float = Field(..., description="0 = user's conditions fall inside this test's ranges")
 
+
+# ------------------------------------------------------------------ POST /assess
 
 class AssessRequest(BaseModel):
-    # TODO: what the frontend sends to POST /assess
-    #   oxygen_pct (0-100), pressure_psi, airflow_cm_s, material (optional key from /materials)
-    # Add validation limits so bad input returns a 422 automatically
-    pass
+    oxygen_pct: float = Field(..., ge=0, le=100, examples=[34])
+    pressure_psi: float = Field(..., gt=0, le=50, examples=[8.2])
+    airflow_cm_s: float = Field(..., ge=0, le=500, examples=[10])
+    material: Optional[str] = Field(None, examples=["PMMA"], description="Key from /materials, or null for any")
+    gravity_g: float = Field(0, ge=0, le=1.5, examples=[0.165], description="From the chosen preset")
+    preset_id: Optional[str] = Field(None, examples=["moon_habitat"], description="Informational only")
 
 
 class Evidence(BaseModel):
-    # TODO: id (experiment id) + what_happened (string)
-    pass
+    id: str
+    what_happened: str
 
 
 class AssessResponse(BaseModel):
-    # TODO: what POST /assess returns
-    #   risk_level   - "low" | "elevated" | "high" | "insufficient data"
-    #   explanation  - 3-5 sentences citing experiment ids
-    #   evidence     - list of Evidence
-    #   data_gaps    - list of strings
-    #   matches      - list of MatchedExperiment (the 5 closest)
-    #   disclaimer   - fixed "research aid, not a safety certification" text
-    pass
+    risk_level: RiskLevel
+    explanation: str
+    evidence: List[Evidence] = []
+    data_gaps: List[str] = []
+    matches: List[MatchedExperiment] = []
+    disclaimer: str = DISCLAIMER
+
+
+# ------------------------------------------------------------------ GET /health, errors
+
+class Health(BaseModel):
+    status: Literal["ok", "error"]
+    experiments: int
+
+
+class ErrorResponse(BaseModel):
+    """FastAPI's default error shape: {"detail": "..."}"""
+    detail: str
