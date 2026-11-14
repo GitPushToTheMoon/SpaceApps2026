@@ -4,60 +4,165 @@ Run from the repo root:  uvicorn backend.main:app --reload
 Interactive docs:        http://localhost:8000/docs
 Full JSON reference:     API.md
 """
-from fastapi import FastAPI
+import os
+from functools import lru_cache
+from typing import List, Optional
 
-app = FastAPI(title="Flame in Freefall API")
+from fastapi import FastAPI, Header, HTTPException, Query
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
 
-# TODO: add CORS middleware so the frontend (different URL/port) can call the API
-# - allow all origins during the hackathon, or read FRONTEND_ORIGIN from env for the deployed version
+from . import ai, data, matching
+from .schemas import (AssessRequest, AssessResponse, Evidence, Experiment, Health,
+                      Material, Preset)
+
+app = FastAPI(
+    title="Flame in Freefall API",
+    description="Fire-safety insights from NASA microgravity combustion data (PSI).",
+    version="1.0",
+)
+
+# Let the frontend (a different URL/port) call the API.
+# FRONTEND_ORIGIN can be "*" or a comma-separated list of URLs.
+_origins = [o.strip() for o in os.environ.get("FRONTEND_ORIGIN", "*").split(",") if o.strip()]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=_origins or ["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+RISK_LEVELS = {"low", "elevated", "high", "insufficient data"}
+ADMIN_TOKEN = os.environ.get("ADMIN_TOKEN")  # optional; set it when deployed
 
 
-@app.get("/health")
+@app.get("/", include_in_schema=False)
+def root():
+    return RedirectResponse("/docs")
+
+
+@app.get("/health", response_model=Health)
 def health():
-    # TODO: return {"status": "ok", "experiments": <number of verified experiments>}
-    #       Used to check the backend is up (and by the frontend on load)
-    return {"status": "ok"}
+    try:
+        return Health(status="ok", experiments=data.experiment_count())
+    except Exception as e:  # data files missing/broken
+        print(f"[health] {e}")
+        return Health(status="error", experiments=0)
 
 
-@app.get("/materials")
+@app.get("/materials", response_model=List[Material])
 def materials():
-    # TODO: return all materials from data.load_materials(), sorted by priority then display_name
-    #       Frontend uses this for the material dropdown
-    return []
+    return data.load_materials()
 
 
-@app.get("/experiments")
-def experiments(investigation: str = None, material: str = None,
-                fuel_type: str = None, environment: str = None, sort: str = "relevance"):
-    # TODO: return verified experiments as Experiment objects
-    # - optional filters: investigation, material, fuel_type (CSV columns),
-    #   environment (from the AI analysis, e.g. "lunar base")
-    # - sort by fire_safety_relevance (highest first) or by id
-    return []
+@app.get("/presets", response_model=List[Preset])
+def presets():
+    return data.load_presets()
 
 
-@app.get("/experiments/{exp_id}")
+@app.get("/experiments", response_model=List[Experiment])
+def experiments(
+    investigation: Optional[str] = Query(None, description="e.g. FLEX, SAFFIRE, BASS-II, BRE, PSI-69"),
+    material: Optional[str] = Query(None, description="Material key from /materials, e.g. PMMA"),
+    fuel_type: Optional[str] = Query(None, description="solid, liquid or gas"),
+    outcome_category: Optional[str] = Query(None, description="e.g. burned, self-extinguished"),
+    environment: Optional[str] = Query(None, description="e.g. lunar base (from AI analysis)"),
+    sort: str = Query("relevance", pattern="^(relevance|id)$"),
+):
+    return data.list_experiments(
+        investigation=investigation, material=material, fuel_type=fuel_type,
+        outcome_category=outcome_category, environment=environment, sort=sort,
+    )
+
+
+@app.get("/experiments/{exp_id}", response_model=Experiment)
 def experiment(exp_id: str):
-    # TODO: return one Experiment, or 404 if the id doesn't exist
-    return {}
+    exp = data.get_experiment(exp_id)
+    if exp is None:
+        raise HTTPException(404, f"No experiment with id {exp_id}")
+    return exp
 
 
-@app.post("/assess")
-def assess(request: dict):
-    # TODO: the risk checker (change `dict` to AssessRequest once schemas.py is filled)
-    # 1. If a material was given, look it up in materials -> 400 if unknown; get its fuel_type
-    # 2. matching.find_matches(...) -> 5 closest experiments
-    # 3. No matches (empty dataset) -> return risk_level "insufficient data" without calling AI
-    # 4. ai.assess(conditions, matches) -> risk_level, explanation, evidence, data_gaps
-    # 5. SAFETY CHECK: drop any evidence whose id isn't in the matches (AI made it up)
-    # 6. Return AssessResponse (include the matches + disclaimer)
-    # - cache results for identical inputs so repeat questions don't cost another AI call
-    # - AI failure -> 502 with a readable message
-    return {"risk_level": "insufficient data", "explanation": "TODO"}
+# ------------------------------------------------------------------ risk checker
 
+@lru_cache(maxsize=256)
+def _assess_cached(oxygen: float, pressure: float, airflow: float,
+                   material: Optional[str], gravity: float) -> AssessResponse:
+    """Same inputs -> same answer without another Gemini call.
+    Failures raise, and exceptions are never cached, so a retry tries Gemini again."""
+    fuel_type = None
+    if material:
+        mat = data.get_material(material)
+        if mat is None:
+            raise HTTPException(400, f"Unknown material '{material}'. See /materials.")
+        material, fuel_type = mat.material, mat.fuel_type
+
+    matches_df = matching.find_matches(oxygen, pressure, airflow, material, fuel_type)
+    matches = matching.to_matched_experiments(matches_df)
+    code_gaps = matching.coverage_gaps(matches_df, oxygen, pressure, airflow, material, gravity)
+
+    if not matches:
+        return AssessResponse(
+            risk_level="insufficient data",
+            explanation="No verified experiments are loaded yet, so there is nothing to compare against.",
+            evidence=[], data_gaps=code_gaps, matches=[],
+        )
+
+    conditions = {
+        "oxygen_pct": oxygen, "pressure_psi": pressure, "airflow_cm_s": airflow,
+        "material": material or "any", "gravity_g": gravity,
+    }
+    result = ai.assess(conditions, [m.model_dump(exclude={"analysis"}) for m in matches])
+
+    # ---- never trust the AI's output blindly
+    risk = str(result.get("risk_level", "")).strip().lower()
+    if risk not in RISK_LEVELS:
+        risk = "insufficient data"
+
+    valid_ids = {m.id for m in matches}
+    evidence = []
+    for e in result.get("evidence") or []:
+        if isinstance(e, dict) and e.get("id") in valid_ids and e.get("what_happened"):
+            evidence.append(Evidence(id=e["id"], what_happened=str(e["what_happened"])))
+
+    gaps: List[str] = []
+    for g in code_gaps + [str(x) for x in (result.get("data_gaps") or [])]:
+        if g and g not in gaps:
+            gaps.append(g)
+
+    return AssessResponse(
+        risk_level=risk,
+        explanation=str(result.get("explanation") or "").strip(),
+        evidence=evidence,
+        data_gaps=gaps,
+        matches=matches,
+    )
+
+
+@app.post("/assess", response_model=AssessResponse)
+def assess(req: AssessRequest):
+    try:
+        return _assess_cached(
+            round(req.oxygen_pct, 1), round(req.pressure_psi, 2), round(req.airflow_cm_s, 1),
+            req.material.strip() if req.material else None, round(req.gravity_g, 3),
+        )
+    except HTTPException:
+        raise
+    except ai.AIUnavailable:
+        raise HTTPException(502, "AI assessment unavailable right now. Please try again in a minute.")
+    except Exception as e:
+        print(f"[assess] unexpected error: {e!r}")
+        raise HTTPException(502, "AI assessment failed. Please try again.")
+
+
+# ------------------------------------------------------------------ admin
 
 @app.post("/admin/reload")
-def reload_data():
-    # TODO: call data.reload() and clear the /assess cache
-    #       Run this after the data team updates the CSVs or analysis.json
-    return {"status": "TODO"}
+def reload_data(x_admin_token: Optional[str] = Header(None)):
+    """Re-read the CSVs/JSON and clear cached /assess answers.
+    If ADMIN_TOKEN is set in the environment, send it as the X-Admin-Token header."""
+    if ADMIN_TOKEN and x_admin_token != ADMIN_TOKEN:
+        raise HTTPException(403, "Admin token required")
+    data.reload()
+    _assess_cached.cache_clear()
+    return {"status": "reloaded", "experiments": data.experiment_count()}
