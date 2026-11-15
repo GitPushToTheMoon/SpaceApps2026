@@ -54,9 +54,9 @@ export const COLORS = {
   orange: 'oklch(0.73 0.16 55)',
   red: 'oklch(0.6 0.19 27)',
   gray: '#c4c6ca',
-  amber: 'oklch(0.79 0.16 72)',
-  amberWash: 'oklch(0.965 0.04 82)',
-  amberText: 'oklch(0.42 0.1 60)',
+  brand: '#86BAFF', // SparkShield primary light (replaces amber)
+  brandWash: '#EAF3FF',
+  brandDark: '#003780',
   danger: 'oklch(0.5 0.17 27)',
   positive: 'oklch(0.45 0.12 150)',
   ink: '#16181b',

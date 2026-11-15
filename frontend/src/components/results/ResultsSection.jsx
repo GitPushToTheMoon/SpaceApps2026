@@ -25,14 +25,14 @@ export default function ResultsSection({ planner }) {
       <div className="card agent-card">
         {/* 1. Agent header */}
         <div className="agent-card__head">
-          <BrandMark size={28} />
+          <BrandMark avatar />
           <div className="col gap-1 flex-1">
             <span className="agent-card__title">Fire-safety agent</span>
             <span className="text-sm muted">
               {CHAT_TABS[tab].name} · {status.short}
             </span>
           </div>
-          <span className="tag tag--amber mono nowrap">AGENT RESULT</span>
+          <span className="tag tag--brand mono nowrap">AGENT RESULT</span>
         </div>
 
         {/* 2. Tab bar, inside the agent box */}

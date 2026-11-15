@@ -55,7 +55,7 @@ export default function OverallTab({ board }) {
           const L = level5(score);
           const drives = ship.stocked && ship.driver === key;
           return (
-            <div key={key} className="phase-card" style={{ borderColor: drives ? COLORS.amber : COLORS.lineSoft }}>
+            <div key={key} className="phase-card" style={{ borderColor: drives ? COLORS.brand : COLORS.lineSoft }}>
               <span className="text-sm muted">{label}</span>
               <span className="mono phase-card__score">{score ?? '—'}</span>
               <span className="row gap-6 text-sm">

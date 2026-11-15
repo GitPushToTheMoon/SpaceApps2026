@@ -24,8 +24,8 @@ export default function MissionBar({ planner }) {
             </div>
           ))}
         </div>
-        <span className="status" style={{ color: M.confirmed ? COLORS.ink : COLORS.amberText }}>
-          <Dot color={M.confirmed ? COLORS.green : COLORS.amber} />
+        <span className="status" style={{ color: M.confirmed ? COLORS.ink : COLORS.brandDark }}>
+          <Dot color={M.confirmed ? COLORS.green : COLORS.brand} />
           {M.confirmed ? 'Confirmed' : 'Not confirmed'}
         </span>
         <button className={`btn btn--outline-dark ${ui.missionOpen ? 'is-active' : ''}`} onClick={actions.toggleMission}>
