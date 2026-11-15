@@ -236,7 +236,9 @@ def context_numbers_ok(text: str, test_counts: List[float], percents: List[float
 # Causes the scoring does NOT use. The AI may mention them only as "not scored"; naming one as a
 # reason for a score ("surface is worse due to lower cabin pressure") is a wrong explanation even
 # when every number is right, so the text is rejected.
-_UNSCORED = re.compile(r"\b(?:cabin\s+)?pressure\b|\d\s*psia?\b|\bEVA[\s-]*prep\w*|\bheat\b|\bLi-?ion\b|\bbatter(?:y|ies)\b",
+# Li-ion packs and hot machinery ARE scored (as ignition sources), so only pressure,
+# EVA-prep and "machinery heat" as a cause are flagged.
+_UNSCORED = re.compile(r"\b(?:cabin\s+)?pressure\b|\d\s*psia?\b|\bEVA[\s-]*prep\w*|\bmachinery\s+heat\b",
                        re.IGNORECASE)
 _NOT_SCORED = re.compile(r"not\s+(?:part\s+of\s+|in(?:cluded\s+in)?\s+)?(?:the\s+)?scor|n't\s+(?:part\s+of\s+|in\s+)?(?:the\s+)?scor"
                          r"|unscored|not\s+(?:counted|included|considered)|do(?:es)?(?:n't|\s+not)\s+(?:affect|change|count)",
@@ -245,7 +247,7 @@ _SENTENCE = re.compile(r"[^.!?;]+[.!?;]?")
 
 
 def unscored_causes_ok(text: str) -> Tuple[bool, List[str]]:
-    """Each sentence that mentions cabin pressure, EVA-prep, heat or batteries must also say
+    """Each sentence that mentions cabin pressure, EVA-prep or machinery heat must also say
     they are not scored. Returns (ok, offending sentences)."""
     bad = [s.strip() for s in _SENTENCE.findall(text or "")
            if _UNSCORED.search(s) and not _NOT_SCORED.search(s)]

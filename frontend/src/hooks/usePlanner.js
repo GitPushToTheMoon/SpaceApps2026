@@ -27,7 +27,7 @@ export function usePlanner({ initialLayout = 'iss', cardDetail = 'Full', riskCol
     colouring: riskColouring,
     detail: cardDetail === 'Full',
     missionOpen: false,
-    overviewOpen: true,
+    overviewOpen: false, // open, it covers the right-hand modules; the header still shows the score
   });
   const [form, setForm] = useState(emptyForm());
   const [newMat, setNewMat] = useState(null);
