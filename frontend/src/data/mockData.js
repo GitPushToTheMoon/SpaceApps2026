@@ -55,6 +55,8 @@ export const MOCK_MATERIALS = [
 const it = (lib, qty, l, w, h) => ({ lib, qty, l, w, h });
 const room = (name, type, x, y, items = []) => ({ name, type, x, y, items });
 
+const bays = (w, h) => Array.from({ length: w * h }, (_, i) => room('Empty bay', 'BAY', i % w, Math.floor(i / w)));
+
 // Functions so each load returns fresh objects (ids get assigned by Room/Item).
 export const MOCK_LAYOUTS = {
   iss: () => [
@@ -82,5 +84,8 @@ export const MOCK_LAYOUTS = {
     room('Stowage', 'STO', 4, 0, [it('ctb', 2, 50, 42, 25), it('foam', 1, 40, 30, 5)]),
     room('Life support', 'LS', 4, 2, [it('oxygen', 1, 60, 30, 30), it('fan', 2, 20, 20, 10)]),
   ],
-  blank: () => [],
+  // Custom hulls: a fixed grid of empty bays the engineer assigns module types to.
+  'custom-small': () => bays(3, 2),
+  'custom-medium': () => bays(4, 3),
+  'custom-large': () => bays(6, 3),
 };

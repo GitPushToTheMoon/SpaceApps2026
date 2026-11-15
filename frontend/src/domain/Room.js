@@ -32,6 +32,10 @@ export class Room {
   get isStocked() {
     return this.items.length > 0;
   }
+  /** An empty cell of the hull, waiting for a module type. */
+  get isBay() {
+    return !!this.info.bay;
+  }
 
   isAdjacentTo(other) {
     return other.id !== this.id && Math.abs(this.x - other.x) + Math.abs(this.y - other.y) === 1;
@@ -52,7 +56,12 @@ export class Room {
     return this.with({ name });
   }
   changeType(type) {
-    return this.with({ type, airflow: ROOM_TYPES[type].air });
+    const name = this.isBay ? ROOM_TYPES[type].name : this.name; // a bay takes its new type's name
+    return this.with({ type, name, airflow: ROOM_TYPES[type].air });
+  }
+  /** Turn the module back into an empty bay (items are removed). */
+  clear() {
+    return this.with({ type: 'BAY', name: 'Empty bay', airflow: 0, items: [] });
   }
   setAirflow(airflow) {
     return this.with({ airflow });

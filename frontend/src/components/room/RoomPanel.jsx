@@ -1,4 +1,4 @@
-import { ROOM_TYPES } from '../../domain/constants';
+import { MODULE_TYPES } from '../../domain/constants';
 import { Field, PhaseBars, TypeBadge } from '../common';
 import AddItemForm from './AddItemForm';
 import StoredItems from './StoredItems';
@@ -18,7 +18,7 @@ export default function RoomPanel({ planner, room }) {
         <div className="room-panel__head">
           <div className="row gap-8">
             <TypeBadge room={room} size="md" />
-            <input className="room-panel__name" value={room.name} disabled={locked} onChange={(e) => update((r) => r.rename(e.target.value))} />
+            <input className="room-panel__name" value={room.name} disabled={locked || room.isBay} onChange={(e) => update((r) => r.rename(e.target.value))} />
             <button className="icon-btn icon-btn--filled" title="Close" onClick={actions.deselect}>
               ×
             </button>
@@ -27,7 +27,12 @@ export default function RoomPanel({ planner, room }) {
           <div className="room-panel__props">
             <Field label="Type" small>
               <select className="input input--sm" value={room.type} disabled={locked} onChange={(e) => update((r) => r.changeType(e.target.value))}>
-                {Object.entries(ROOM_TYPES).map(([code, t]) => (
+                {room.isBay && (
+                  <option value="BAY" disabled>
+                    Choose a module type…
+                  </option>
+                )}
+                {MODULE_TYPES.map(([code, t]) => (
                   <option key={code} value={code}>
                     {t.name} · {code}
                   </option>
@@ -40,7 +45,7 @@ export default function RoomPanel({ planner, room }) {
                 type="number"
                 min="0"
                 value={room.airflow}
-                disabled={locked}
+                disabled={locked || room.isBay}
                 onChange={(e) => update((r) => r.setAirflow(Math.max(0, parseFloat(e.target.value) || 0)))}
               />
             </Field>
@@ -50,26 +55,41 @@ export default function RoomPanel({ planner, room }) {
             </div>
           </div>
 
-          <PhaseBars
-            rows={[
-              ['Cruise', sc.pre],
-              ['Surface', sc.surf],
-            ]}
-          />
+          {!room.isBay && (
+            <PhaseBars
+              rows={[
+                ['Cruise', sc.pre],
+                ['Surface', sc.surf],
+              ]}
+            />
+          )}
         </div>
 
         {/* Body */}
         <div className="room-panel__body">
-          <AddItemForm library={library} form={form} newMat={newMat} actions={actions} onAdd={() => actions.addItem(room.id)} />
-          <StoredItems room={room} library={library} count={board.stats(room).n} onRemove={(itemId) => actions.removeItem(room.id, itemId)} />
-          <Suggestions items={board.suggestions(room)} onApply={actions.applyAction} />
+          {room.isBay ? (
+            <div className="text-md-sm muted lh-15">
+              This bay is empty. Choose a module type above to turn it into a space you can stock. The hull is fixed, so new
+              modules can only go into empty bays.
+            </div>
+          ) : (
+            <>
+              <AddItemForm library={library} form={form} newMat={newMat} actions={actions} onAdd={() => actions.addItem(room.id)} />
+              <StoredItems room={room} library={library} count={board.stats(room).n} onRemove={(itemId) => actions.removeItem(room.id, itemId)} />
+              <Suggestions items={board.suggestions(room)} onApply={actions.applyAction} />
+            </>
+          )}
         </div>
 
         {/* Footer */}
         <div className="room-panel__foot">
-          {!locked ? (
-            <button className="link-btn link-btn--danger" onClick={() => actions.deleteRoom(room.id)}>
-              Delete space
+          {!locked && !room.isBay ? (
+            <button
+              className="link-btn link-btn--danger"
+              title="Removes its items and leaves an empty bay"
+              onClick={() => actions.clearRoom(room.id)}
+            >
+              Clear module
             </button>
           ) : (
             <span />

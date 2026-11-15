@@ -41,7 +41,7 @@ export class AgentService {
         surface: { body: B.body, gravity_g: B.g, pressure_psia: A.p, o2_percent: A.o2, stay_days: mission.stay, eva_prep_periods_high_o2: mission.eva },
       },
       out_of_scope: ['launch'],
-      spaces: layout.rooms.map((r) => ({
+      spaces: layout.modules.map((r) => ({ // empty bays aren't spaces
         id: r.id,
         name: r.name,
         type: r.info.name,

@@ -9,12 +9,15 @@ import ShipOverview from './ShipOverview';
 export default function ShipMap({ planner }) {
   const { layout, layoutKey, board, ui, locked, actions } = planner;
   const geo = useMemo(() => new MapGeometry(layout), [layout]);
+  const free = layout.bays.length;
 
   const hint = locked
     ? 'Layout locked for crew. Items can still be added, removed and swapped.'
     : ui.dragId
-      ? 'Drop the module on a dashed box to move it.'
-      : 'Click a module to stock it. Drag a module onto a dashed box to move it.';
+      ? 'Drop the module on another module or an empty bay to swap their places.'
+      : free
+        ? `Fixed hull · ${free} empty bay${free === 1 ? '' : 's'}. Click a bay to assign a module; drag modules to swap places.`
+        : 'Fixed hull · every bay is in use. Click a module to stock or retype it; drag to swap places. To change a module, clear it back to a bay.';
 
   return (
     <div className="card map-card">

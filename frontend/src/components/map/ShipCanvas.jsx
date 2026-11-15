@@ -15,24 +15,34 @@ function Hull({ hull }) {
   );
 }
 
-function EmptySlot({ left, top, label, dragging, onAdd, onDropRoom }) {
+/** Drag-and-drop target props: dropping a module on a cell swaps the two. */
+function dropTarget(room, ui, locked, actions) {
+  if (locked) return {};
+  return {
+    onDragOver: (e) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+    },
+    onDrop: (e) => {
+      e.preventDefault();
+      const id = e.dataTransfer.getData('text/plain') || ui.dragId;
+      if (id && id !== room.id) actions.swapRooms(id, room.id);
+    },
+  };
+}
+
+/** An unused cell of the hull. Click it to choose a module type. */
+function BayCard({ room, left, top, selected, dragging, locked, onSelect, drop }) {
   return (
     <div
-      className={`slot ${dragging ? 'is-dragging' : ''}`}
-      style={{ left, top }}
-      title="Add a module here"
-      onClick={onAdd}
-      onDragOver={(e) => {
-        e.preventDefault();
-        e.dataTransfer.dropEffect = 'move';
-      }}
-      onDrop={(e) => {
-        e.preventDefault();
-        onDropRoom(e.dataTransfer.getData('text/plain'));
-      }}
+      className={`slot ${dragging ? 'is-dragging' : ''} ${selected ? 'is-selected' : ''}`}
+      style={{ left, top, cursor: locked ? 'default' : 'pointer' }}
+      title={locked ? 'Empty bay' : 'Empty bay: click to assign a module type'}
+      onClick={() => !locked && onSelect(room.id)}
+      {...drop}
     >
       <span className="slot__plus">+</span>
-      <span className="slot__label">{label}</span>
+      <span className="slot__label">{dragging ? 'Move here' : locked ? 'Empty bay' : 'Empty bay · assign module'}</span>
     </div>
   );
 }
@@ -41,7 +51,6 @@ export default function ShipCanvas({ geo, planner }) {
   const { layout, board, ui, locked, actions } = planner;
   const dragging = !!ui.dragId;
   const hull = geo.hull();
-  const slotLabel = layout.isEmpty ? 'Add first module' : dragging ? 'Drop here' : 'Add module';
 
   return (
     <div className="ship-canvas" style={{ width: geo.width, height: geo.height }}>
@@ -54,39 +63,38 @@ export default function ShipCanvas({ geo, planner }) {
         </Fragment>
       ))}
 
-      {!locked &&
-        geo.slots.map((p) => (
-          <EmptySlot
-            key={`${p.x},${p.y}`}
-            left={geo.x(p.x)}
-            top={geo.y(p.y)}
-            label={slotLabel}
+      {layout.rooms.map((room) =>
+        room.isBay ? (
+          <BayCard
+            key={room.id}
+            room={room}
+            left={geo.x(room.x)}
+            top={geo.y(room.y)}
+            selected={room.id === ui.sel}
             dragging={dragging}
-            onAdd={() => actions.addRoom(p.x, p.y)}
-            onDropRoom={(id) => {
-              const roomId = id || ui.dragId;
-              if (roomId) actions.moveRoom(roomId, p.x, p.y);
-            }}
+            locked={locked}
+            onSelect={actions.select}
+            drop={dropTarget(room, ui, locked, actions)}
           />
-        ))}
-
-      {layout.rooms.map((room) => (
-        <ModuleCard
-          key={room.id}
-          room={room}
-          board={board}
-          left={geo.x(room.x)}
-          top={geo.y(room.y)}
-          selected={room.id === ui.sel}
-          locked={locked}
-          colouring={ui.colouring}
-          detail={ui.detail}
-          isDragging={ui.dragId === room.id}
-          onSelect={actions.select}
-          onDragStart={actions.startDrag}
-          onDragEnd={actions.endDrag}
-        />
-      ))}
+        ) : (
+          <ModuleCard
+            key={room.id}
+            room={room}
+            board={board}
+            left={geo.x(room.x)}
+            top={geo.y(room.y)}
+            selected={room.id === ui.sel}
+            locked={locked}
+            colouring={ui.colouring}
+            detail={ui.detail}
+            isDragging={ui.dragId === room.id}
+            onSelect={actions.select}
+            onDragStart={actions.startDrag}
+            onDragEnd={actions.endDrag}
+            drop={dropTarget(room, ui, locked, actions)}
+          />
+        )
+      )}
     </div>
   );
 }
