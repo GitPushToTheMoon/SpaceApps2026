@@ -225,7 +225,8 @@ def _allowed(*objs) -> Dict[str, List[float]]:
 
 def _text_ok(t, allowed: Dict[str, List[float]]) -> bool:
     return (isinstance(t, str) and t.strip() != "" and risk.all_numbers_ok(t, allowed["all"])[0]
-            and risk.context_numbers_ok(t, allowed["tests"], allowed["percents"])[0])
+            and risk.context_numbers_ok(t, allowed["tests"], allowed["percents"])[0]
+            and risk.unscored_causes_ok(t)[0])
 
 
 # ------------------------------------------------------------------ text

@@ -16,6 +16,7 @@ from . import adapter, data
 ADDABLE = ("ext", "det", "mask")
 MAX_FIXES_PER_ROOM = 3
 MAX_MOVES = 5
+MAX_TARGET_SCORE = 60.0   # never suggest moving fuel into a space rated High (>60) or worse
 
 
 # ------------------------------------------------------------------ validation
@@ -181,7 +182,8 @@ def find_moves(req: dict, base: Optional[dict] = None) -> List[dict]:
     """Up to 5 item moves that lower the ship's overall score, biggest drop first.
     Candidates (as in the prototype): Moderate/High flammables in a space with an ignition
     or oxygen source, or in a passage. Targets: other non-passage spaces with no ignition
-    or oxygen source (moving fuel next to a heater or an O2 outlet is never suggested)."""
+    or oxygen source (moving fuel next to a heater or an O2 outlet is never suggested), that are
+    not rated High or worse, and that stay at Elevated or below after the move."""
     base = base or adapter.score(req)
     moves = []
     for src in req["spaces"]:
@@ -192,13 +194,16 @@ def find_moves(req: dict, base: Optional[dict] = None) -> List[dict]:
                 continue
             best = None
             for dst in req["spaces"]:
-                if _has_source(dst):
+                if _has_source(dst) or (base["rooms"][dst["id"]]["overall"] or 0) > MAX_TARGET_SCORE:
                     continue
                 a = validate_action({"type": "move", "item_id": item["id"], "from_id": src["id"],
                                      "to_id": dst["id"]}, req)
                 if not a:
                     continue
-                drop = points(req, a, base)["ship"]
+                after = adapter.score(apply_action(req, a))
+                if (after["rooms"][dst["id"]]["overall"] or 0) > MAX_TARGET_SCORE:
+                    continue  # the move would make the target High or worse
+                drop = round(base["overall"]["score"] - after["overall"]["score"], 1)
                 if drop > 0 and (best is None or drop > best[0]):
                     best = (drop, dst)
             if best:

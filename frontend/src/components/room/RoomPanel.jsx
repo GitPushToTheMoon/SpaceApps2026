@@ -69,8 +69,8 @@ export default function RoomPanel({ planner, room }) {
         <div className="room-panel__body">
           {room.isBay ? (
             <div className="text-md-sm muted lh-15">
-              This bay is empty. Choose a module type above to turn it into a space you can stock. The hull is fixed, so new
-              modules can only go into empty bays.
+              This bay is empty. Choose a module type above to add a module here. The hull is fixed, so new modules can only
+              go into empty bays; delete a module to free its bay.
             </div>
           ) : (
             <>
@@ -86,10 +86,10 @@ export default function RoomPanel({ planner, room }) {
           {!locked && !room.isBay ? (
             <button
               className="link-btn link-btn--danger"
-              title="Removes its items and leaves an empty bay"
+              title="Removes the module and its items, leaving an empty bay in the hull"
               onClick={() => actions.clearRoom(room.id)}
             >
-              Clear module
+              Delete module
             </button>
           ) : (
             <span />

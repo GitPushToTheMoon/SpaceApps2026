@@ -37,12 +37,12 @@ function BayCard({ room, left, top, selected, dragging, locked, onSelect, drop }
     <div
       className={`slot ${dragging ? 'is-dragging' : ''} ${selected ? 'is-selected' : ''}`}
       style={{ left, top, cursor: locked ? 'default' : 'pointer' }}
-      title={locked ? 'Empty bay' : 'Empty bay: click to assign a module type'}
+      title={locked ? 'Empty bay' : 'Empty bay: click to add a module, or drop a module here to move it'}
       onClick={() => !locked && onSelect(room.id)}
       {...drop}
     >
       <span className="slot__plus">+</span>
-      <span className="slot__label">{dragging ? 'Move here' : locked ? 'Empty bay' : 'Empty bay · assign module'}</span>
+      <span className="slot__label">{dragging ? 'Move here' : locked ? 'Empty bay' : 'Empty bay · add module'}</span>
     </div>
   );
 }

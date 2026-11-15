@@ -3,7 +3,12 @@ export default function MovesTab({ moves, onApply }) {
     <div className="card card--pad-lg col gap-12" style={{ maxWidth: 880 }}>
       <div className="eyebrow">SUGGESTED ITEM MOVES</div>
       <div className="text-help">Item moves the agent recommends to lower combined risk across both phases.</div>
-      {!moves.length && <div className="empty-note">No moves would lower combined risk.</div>}
+      {!moves.length && (
+        <div className="empty-note">
+          No safe moves. Every space without ignition or oxygen sources is already High, or would become High. Try the room
+          fixes, or add a stowage module in an empty bay.
+        </div>
+      )}
       {moves.map((mv) => (
         <div key={mv.key} className="move-row">
           <div className="move-row__text">

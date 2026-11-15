@@ -300,3 +300,44 @@ def test_invented_citation_or_url_is_rejected(monkeypatch):
         monkeypatch.setattr(ai, "planner_chat", lambda *a, r=reply, **k: {"reply": r, "actions": []})
         j = client.post("/api/chat", json=chat_body()).json()
         assert j["text_source"] == "fallback" and j["citations"] == []
+
+
+# ------------------------------------------------------------------ explanations and moves
+
+def test_unscored_cause_in_summary_is_rejected(monkeypatch):
+    calls = []
+
+    def liar(facts, g=0):
+        calls.append(1)
+        return {"summary": "Surface is worse due to higher oxygen and lower cabin pressure.", "rooms": {}, "fixes": {}}
+    monkeypatch.setattr(ai, "planner_text", liar)
+    assert assess(load("iss_moon"))["text_source"] == "template" and len(calls) == 2
+
+
+def test_unscored_cause_is_fine_when_marked_not_scored(monkeypatch):
+    monkeypatch.setattr(ai, "planner_text", lambda *a, **k: {
+        "summary": "Surface is worse because of its higher oxygen. Cabin pressure is not scored.", "rooms": {}, "fixes": {}})
+    assert assess(load("iss_moon"))["text_source"] == "ai"
+
+
+def test_moves_never_target_high_rooms():
+    for name in ("iss_moon", "transit_mars"):
+        body = load(name)
+        req = AssessRequest(**body).model_dump()
+        j = assess(body)
+        rooms = {r["id"]: r for r in j["rooms"]}
+        for m in j["moves"]:
+            assert rooms[m["to_id"]]["overall"] <= 60
+            after = adapter.score(actions.apply_action(req, {"type": "move", "item_id": m["item_id"],
+                                                              "from_id": m["from_id"], "to_id": m["to_id"]}))
+            assert after["rooms"][m["to_id"]]["overall"] <= 60
+
+
+def test_new_empty_stowage_module_gets_moves():
+    # In the ISS layout the only room without sources (PMM Stowage) is High, so no moves.
+    assert assess(load("iss_moon"))["moves"] == []
+    body = load("iss_moon")
+    body["spaces"].append({"id": "new-sto", "name": "New stowage", "type": "Stowage", "passage": False,
+                           "airflow_cm_s": 10, "neighbours": [], "items": []})
+    j = assess(body)
+    assert j["moves"] and all(m["to_id"] == "new-sto" for m in j["moves"])

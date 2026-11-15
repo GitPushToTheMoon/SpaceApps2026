@@ -57,9 +57,21 @@ const room = (name, type, x, y, items = []) => ({ name, type, x, y, items });
 
 const bays = (w, h) => Array.from({ length: w * h }, (_, i) => room('Empty bay', 'BAY', i % w, Math.floor(i / w)));
 
+/** A preset ship's hull is the rectangle around its modules; unused cells are empty bays
+ *  the engineer can add modules to (the hull itself never grows). */
+const withBays = (rooms) => {
+  const xs = rooms.map((r) => r.x);
+  const ys = rooms.map((r) => r.y);
+  const used = new Set(rooms.map((r) => `${r.x},${r.y}`));
+  const out = [...rooms];
+  for (let y = Math.min(...ys); y <= Math.max(...ys); y++)
+    for (let x = Math.min(...xs); x <= Math.max(...xs); x++) if (!used.has(`${x},${y}`)) out.push(room('Empty bay', 'BAY', x, y));
+  return out;
+};
+
 // Functions so each load returns fresh objects (ids get assigned by Room/Item).
 export const MOCK_LAYOUTS = {
-  iss: () => [
+  iss: () => withBays([
     room('PMM Stowage & Logistics', 'STO', 1, 0, [it('ctb', 1, 50, 42, 25), it('cotton', 2, 30, 20, 5), it('det', 1, 10, 10, 5)]),
     room('Quest Airlock', 'AL', 0, 1, [it('oxygen', 1, 60, 30, 30), it('foam', 1, 40, 30, 4)]),
     room('Node 1 Galley', 'GAL', 1, 1, [it('warmer', 1, 40, 30, 25), it('food', 6, 20, 15, 8), it('wipes', 4, 15, 10, 6), it('ext', 1, 50, 15, 15)]),
@@ -67,8 +79,8 @@ export const MOCK_LAYOUTS = {
     room('Node 2 Crew Quarters', 'CQ', 3, 1, [it('nomexbag', 4, 30, 20, 5), it('laptop', 1, 35, 25, 3), it('liion', 1, 20, 10, 8), it('det', 1, 10, 10, 5)]),
     room('Node 3 Hygiene & Exercise', 'HYG', 1, 2, [it('exercise', 1, 120, 60, 50), it('towels', 2, 40, 30, 1)]),
     room('Columbus Lab', 'LAB', 3, 2, [it('ptfe', 3, 100, 5, 5), it('laptop', 1, 35, 25, 3), it('det', 1, 10, 10, 5)]),
-  ],
-  transit: () => [
+  ]),
+  transit: () => withBays([
     room('Engine room', 'ENG', 0, 1, [it('pump', 1, 40, 30, 20), it('lube', 2, 10, 10, 20)]),
     room('Spine A', 'HALL', 1, 1, [it('ctb', 1, 50, 42, 25)]),
     room('Spine B', 'HALL', 2, 1),
@@ -83,7 +95,7 @@ export const MOCK_LAYOUTS = {
     room('Hygiene', 'HYG', 3, 2, [it('towels', 2, 40, 30, 1)]),
     room('Stowage', 'STO', 4, 0, [it('ctb', 2, 50, 42, 25), it('foam', 1, 40, 30, 5)]),
     room('Life support', 'LS', 4, 2, [it('oxygen', 1, 60, 30, 30), it('fan', 2, 20, 20, 10)]),
-  ],
+  ]),
   // Custom hulls: a fixed grid of empty bays the engineer assigns module types to.
   'custom-small': () => bays(3, 2),
   'custom-medium': () => bays(4, 3),

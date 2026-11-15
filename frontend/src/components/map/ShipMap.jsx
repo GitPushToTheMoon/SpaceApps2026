@@ -14,10 +14,10 @@ export default function ShipMap({ planner }) {
   const hint = locked
     ? 'Layout locked for crew. Items can still be added, removed and swapped.'
     : ui.dragId
-      ? 'Drop the module on another module or an empty bay to swap their places.'
+      ? 'Drop the module on an empty bay to move it there, or on another module to swap places.'
       : free
-        ? `Fixed hull · ${free} empty bay${free === 1 ? '' : 's'}. Click a bay to assign a module; drag modules to swap places.`
-        : 'Fixed hull · every bay is in use. Click a module to stock or retype it; drag to swap places. To change a module, clear it back to a bay.';
+        ? `Fixed hull · ${free} empty bay${free === 1 ? '' : 's'}. Click a bay to add a module; drag modules to move them; delete a module to free its bay.`
+        : 'Hull full · every bay is in use. Delete a module to free a bay; drag modules to swap places.';
 
   return (
     <div className="card map-card">
