@@ -6,11 +6,13 @@ Full JSON reference:     API.md / API_examples.json
 """
 import os
 from functools import lru_cache
+from pathlib import Path
 from typing import List, Optional
 
 from fastapi import FastAPI, Header, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import RedirectResponse
+from fastapi.responses import FileResponse, RedirectResponse
+from fastapi.staticfiles import StaticFiles
 
 from . import ai, api, data, matching, planner, risk
 from .schemas import (AssessRequest, AssessResponse, Evidence, Experiment, Health,
@@ -37,8 +39,15 @@ app.add_middleware(
 ADMIN_TOKEN = os.environ.get("ADMIN_TOKEN")  # optional; set it when deployed
 
 
+# The built React app (frontend/dist, from `npm run build`). When it's there, this one service
+# serves both the website and the API, so they share one URL (no CORS, no separate hosting).
+FRONTEND_DIST = Path(__file__).resolve().parent.parent / "frontend" / "dist"
+
+
 @app.get("/", include_in_schema=False)
 def root():
+    if (FRONTEND_DIST / "index.html").is_file():
+        return FileResponse(FRONTEND_DIST / "index.html")
     return RedirectResponse("/docs")
 
 
@@ -211,3 +220,9 @@ def placement_advice(req: PlacementRequest):
 def planner_assessment(req: PlannerRequest):
     """Score cruise/surface inventory using CSV evidence and explicit prototype weights."""
     return planner.evaluate(req)
+
+
+# ------------------------------------------------------------------ website
+# Must stay LAST: it serves frontend/dist for any path no API route above matched.
+if (FRONTEND_DIST / "index.html").is_file():
+    app.mount("/", StaticFiles(directory=FRONTEND_DIST, html=True), name="frontend")
