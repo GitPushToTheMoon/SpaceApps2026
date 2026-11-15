@@ -3,14 +3,32 @@
 
 🔗 Live demo: https://flame-api-32147745125.us-west1.run.app
 
-# Flame in Freefall
+Turning NASA's microgravity fire experiments into stowage decisions crews can act on.
 
-NASA Space Apps Challenge 2026: fire-safety insights from NASA microgravity combustion data
-(Physical Sciences Informatics, PSI).
+## Mission
 
-Users pick habitat conditions (oxygen, pressure, airflow, material) or a preset (ISS, Moon, Mars)
-and get a fire-risk assessment backed by real NASA experiments, plus a ranked, AI-summarized
-library of 339 experiments.
+Fire behaves differently in space, and the data on how materials burn in microgravity sits in
+NASA's experiment archives. Our mission is to put that data to work: we help mission planners and
+crews see which stowed items raise fire risk, why, and what to move, with every score tied to
+real NASA tests.
+
+## What it does
+
+- **Stowage planner:** lay out a spacecraft (ISS-style station, transit spacecraft or a custom
+  hull), stow items in each module, and get a fire-risk score for every module and the whole ship
+  across two mission phases: in-space cruise and a Moon or Mars surface stay.
+- **Fixes and moves:** the app tests every swap, detector, extinguisher and item move, re-scores
+  the ship, and suggests only the changes that actually lower the risk.
+- **Engineer and crew modes:** engineers can add, move and delete modules within a fixed hull;
+  the crew handoff mode locks the layout so only items can change.
+- **Fire-safety agent:** plain-language explanations and a chat that answers questions using
+  our NASA dataset, with citations to the specific experiments.
+- **Experiment library:** a ranked, AI-summarized library of 339 NASA combustion tests.
+
+All scores are computed in code from NASA data. AI only writes the explanations, and its text is
+checked against the data before it is shown.
+
+## How the code is organized
 
 ```
 SpaceApps2026/
@@ -163,8 +181,12 @@ backup model, `/assess` returns **502** "AI assessment unavailable"; everything 
   | heptane-isooctane | 50/50 fuel mix | liquid | 0 |
   | ethylene / methane | gas fuels | gas | 22 / 5 |
 
-- **presets.json**: ISS cabin (14.7 psi, 21% O2, 0 g), Moon habitat (8.2 psi, 34%, 0.166 g),
-  Mars habitat (8.2 psi, 34%, 0.38 g). Temperature is display-only (no experiment recorded it).
+- **presets.json** (used by `POST /assess`): ISS cabin (14.7 psi, 21% O2, 0 g), Moon habitat
+  (8.2 psi, 34%, 0.166 g), Mars habitat (8.2 psi, 34%, 0.38 g). Temperature is display-only
+  (no experiment recorded it).
+- **Stowage planner surface atmospheres**: Sea-level (14.7 psia, 21% O2), Moon base
+  (10.2 psia, 26.5% O2, the default) and Exploration (8.2 psia, 34% O2). Cruise is always
+  14.7 psia, 21% O2, 0 g.
 - Numbers come from the source documents, never from the AI.
 
 ### Regenerating AI summaries (`analysis.json`)
@@ -212,14 +234,56 @@ Then open a PR on GitHub. After it's merged: `git checkout main && git pull`.
 ---
 
 ## Deploy (Google Cloud Run)
+Build the frontend first (the backend serves `frontend/dist`), then deploy from the repo root:
 ```
-gcloud run deploy flame-api --source . --region us-west1 \
-  --set-env-vars GEMINI_API_KEY=...,GEMINI_MODEL=...,GEMINI_FALLBACK_MODEL=...,FRONTEND_ORIGIN=https://your-frontend-url
+cd frontend && npm install && npm run build && cd ..
+gcloud run deploy flame-api --source . --region us-west1 --allow-unauthenticated \
+  --set-secrets GEMINI_API_KEY=gemini-api-key:latest \
+  --set-env-vars GEMINI_MODEL=gemini-3.5-flash-lite,GEMINI_FALLBACK_MODEL=gemini-3.1-flash-lite,FRONTEND_ORIGIN=* \
+  --min-instances 1
 ```
-The `Procfile` provides the start command. Pass secrets as environment variables, never in code.
+The Gemini key is stored in Google Secret Manager (`gemini-api-key`), never in code or in the
+command. The `Procfile` provides the start command.
 
-Data: NASA Physical Sciences Informatics (psi.nasa.gov) and NASA Technical Reports Server
-(ntrs.nasa.gov). Research aid only; not a safety certification.
+---
+
+## Data Sources
+
+**NASA Physical Sciences Informatics (PSI) microgravity combustion experiments** (339 tests):
+- PSI-69 Flame Extinguishment Experiment (FLEX), 274 tests: https://psi.nasa.gov/physci/repo/data/investigations/PSI-69
+- PSI-25 Burning and Suppression of Solids – II (BASS-II), 24 tests: https://psi.nasa.gov/physci/repo/data/investigations/PSI-25
+- PSI-20 ACME – Burning Rate Emulator, 18 tests: https://psi.nasa.gov/physci/repo/data/investigations/PSI-20
+- PSI-99 Spacecraft Fire Experiment-II (Saffire-II), 10 tests: https://psi.nasa.gov/physci/repo/data/investigations/PSI-99
+- PSI-23 ACME – Structure and Response of Spherical Diffusion Flames, 9 tests: https://psi.nasa.gov/physci/repo/data/investigations/PSI-23
+- PSI-98 Spacecraft Fire Safety Experiment-I (Saffire-I), 2 tests: https://psi.nasa.gov/physci/repo/data/investigations/PSI-98
+- PSI-100 Spacecraft Fire Experiment-III (Saffire-III), 2 tests: https://psi.nasa.gov/physci/repo/data/investigations/PSI-100
+
+**Mission atmosphere and gravity presets:**
+- ISS cabin atmosphere: NASA Technical Report 20120015343, Table 1. https://ntrs.nasa.gov/api/citations/20120015343/downloads/20120015343.pdf
+- Moon and Mars habitat atmosphere: NASA Exploration EVA Concept of Operations. https://www.nasa.gov/wp-content/uploads/2020/01/topic_1-_eva_lunar_surface_concept_of_operations.pdf
+- Gravity: NASA Moon Fact Sheet (https://nssdc.gsfc.nasa.gov/planetary/factsheet/moonfact.html) and Mars Fact Sheet (https://nssdc.gsfc.nasa.gov/planetary/factsheet/marsfact.html)
+
+**Team estimates:** everyday stowage items NASA hasn't tested directly (e.g. cotton clothing, foam,
+packaging) use hazard ratings set by our team. The app labels these "no NASA test data".
+
+**Software:** Python, FastAPI, Uvicorn, pandas, pytest, React, Vite, ESLint (all open source);
+Google Gemini API; Google Cloud Run and Secret Manager.
+
+This tool is a research aid, not a safety certification.
+
+## AI Disclosure
+
+This project uses AI in two ways:
+
+- **In the app:** Google Gemini (`gemini-3.5-flash-lite`, fallback `gemini-3.1-flash-lite`) writes the
+  plain-language explanations and chat answers. All risk scores are computed by our own code from
+  NASA PSI data, not by AI. Before any AI text is shown, it is checked against the data (numbers,
+  experiment IDs, citations and unscored causes); if a check fails, the app shows template text instead.
+- **In development:** parts of the backend and frontend code, tests and documentation were written
+  with help from Anthropic's Claude. Our team made the design and technical decisions and reviewed
+  and tested all code.
+
+No AI-generated images, video or audio are used, and no NASA branding appears in generated content.
 
 ## Team GitPushToTheMoon
 
