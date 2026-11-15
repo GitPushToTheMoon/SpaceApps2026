@@ -22,26 +22,8 @@ export default function ResultsSection({ planner }) {
 
   return (
     <section className="container results">
-      <div className="results__tabs">
-        {tabs.map(([key, label, badge]) => (
-          <button key={key} className={`tab ${tab === key ? 'is-active' : ''}`} onClick={() => actions.setTab(key)}>
-            {label}
-            <span className="mono tab__badge">{badge}</span>
-          </button>
-        ))}
-        <div className="spacer" />
-        <div className="row gap-10 results__status">
-          <span className="row gap-6 text-sm muted">
-            <Dot size={7} color={status.dot} />
-            {status.text}
-          </span>
-          <button className="btn btn--light btn--xs" disabled={status.state === 'run'} onClick={actions.reassess}>
-            Re-assess
-          </button>
-        </div>
-      </div>
-
       <div className="card agent-card">
+        {/* 1. Agent header */}
         <div className="agent-card__head">
           <BrandMark size={28} />
           <div className="col gap-1 flex-1">
@@ -50,7 +32,27 @@ export default function ResultsSection({ planner }) {
               {CHAT_TABS[tab].name} · {status.short}
             </span>
           </div>
-          <span className="tag tag--amber mono">AGENT RESULT</span>
+          <span className="tag tag--amber mono nowrap">AGENT RESULT</span>
+        </div>
+
+        {/* 2. Tab bar, inside the agent box */}
+        <div className="results__tabs">
+          {tabs.map(([key, label, badge]) => (
+            <button key={key} className={`tab ${tab === key ? 'is-active' : ''}`} onClick={() => actions.setTab(key)}>
+              {label}
+              <span className="mono tab__badge">{badge}</span>
+            </button>
+          ))}
+          <div className="spacer" />
+          <div className="row gap-10 results__status">
+            <span className="row gap-6 text-sm muted">
+              <Dot size={7} color={status.dot} />
+              {status.text}
+            </span>
+            <button className="btn btn--light btn--xs nowrap" disabled={status.state === 'run'} onClick={actions.reassess}>
+              Re-assess
+            </button>
+          </div>
         </div>
 
         <div className="agent-card__result">

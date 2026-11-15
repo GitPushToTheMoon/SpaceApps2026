@@ -10,20 +10,6 @@ export default function MissionEditor({ mission: M, onChange }) {
         <div className="text-md muted">Every score below is checked against both phases. A placement is safe only if it passes both.</div>
 
         <div className="mission-editor__cards">
-          {/* Destination */}
-          <div className="card card--pad mission-card" style={{ flex: '1 1 260px' }}>
-            <div className="eyebrow">SURFACE DESTINATION</div>
-            <div className="row gap-8">
-              {Object.entries(BODIES).map(([key, b]) => (
-                <button key={key} className={`body-option ${M.body === key ? 'is-active' : ''}`} onClick={() => onChange('body', key)}>
-                  <span className="body-option__name">{b.name}</span>
-                  <span className="mono text-sm muted">{b.gl}</span>
-                </button>
-              ))}
-            </div>
-            <div className="text-help">Launch is out of scope. Each item has one location, and that location must be safe in cruise and on the surface.</div>
-          </div>
-
           {/* Cruise */}
           <div className="card card--pad mission-card" style={{ flex: '1 1 300px' }}>
             <div className="row between">
@@ -52,19 +38,22 @@ export default function MissionEditor({ mission: M, onChange }) {
           </div>
 
           {/* Surface */}
-          <div className="card card--pad mission-card" style={{ flex: '1 1 360px' }}>
-            <div className="row between">
-              <div className="card-title">Surface</div>
-              <span className="tag tag--amber mono">
-                {M.destination.body.toUpperCase()} · {M.destination.g} G
-              </span>
+          <div className="card card--pad mission-card" style={{ flex: '1 1 420px' }}>
+            <div className="card-title">Surface</div>
+            <div className="row gap-8">
+              {Object.entries(BODIES).map(([key, b]) => (
+                <button key={key} className={`body-option ${M.body === key ? 'is-active' : ''}`} onClick={() => onChange('body', key)}>
+                  <span className="body-option__name">{b.name}</span>
+                  <span className="mono text-sm muted">{b.gl}</span>
+                </button>
+              ))}
             </div>
             <div className="grid-2">
               <Field label="Cabin atmosphere" className="span-2">
                 <select className="input" value={M.atm} onChange={(e) => onChange('atm', e.target.value)}>
-                  {Object.entries(ATMOSPHERES).map(([key, a]) => (
+                  {Object.keys(ATMOSPHERES).map((key) => (
                     <option key={key} value={key}>
-                      {a.name} · {a.label}
+                      {M.atmosphereName(key)} · {ATMOSPHERES[key].label}
                     </option>
                   ))}
                 </select>

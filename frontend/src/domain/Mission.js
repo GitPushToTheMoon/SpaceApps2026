@@ -24,6 +24,10 @@ export class Mission {
   get destination() {
     return BODIES[this.body];
   }
+  /** Display name of a surface atmosphere; "base" follows the destination (Moon base / Mars base). */
+  atmosphereName(key = this.atm) {
+    return key === 'base' ? `${this.destination.body} base` : ATMOSPHERES[key].name;
+  }
 
   with(key, value) {
     return new Mission({ ...this, [key]: value });
