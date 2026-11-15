@@ -52,6 +52,16 @@ export default function ResultsSection({ planner }) {
             <button className="btn btn--light btn--xs nowrap" disabled={status.state === 'run'} onClick={actions.reassess}>
               Re-assess
             </button>
+            {!planner.locked && (
+              <button
+                className="btn btn--dark btn--xs nowrap"
+                disabled={status.state !== 'ok'}
+                title={status.state === 'ok' ? 'Printable report for the materials team' : 'Available once the current assessment finishes'}
+                onClick={actions.openReport}
+              >
+                Export report
+              </button>
+            )}
           </div>
         </div>
 

@@ -27,6 +27,8 @@ export function usePlanner({ initialLayout = 'iss', cardDetail = 'Full', riskCol
     colouring: riskColouring,
     detail: cardDetail === 'Full',
     missionOpen: false,
+    report: false, // handoff report overlay
+    reportBy: '',
     overviewOpen: false, // open, it covers the right-hand modules; the header still shows the score
   });
   const [form, setForm] = useState(emptyForm());
@@ -126,6 +128,9 @@ export function usePlanner({ initialLayout = 'iss', cardDetail = 'Full', riskCol
     setFactorPhase: (factorPhase) => patchUi({ factorPhase }),
     toggleColouring: () => setUi((u) => ({ ...u, colouring: !u.colouring })),
     toggleMission: () => setUi((u) => ({ ...u, missionOpen: !u.missionOpen })),
+    openReport: () => patchUi({ report: true, missionOpen: false }),
+    closeReport: () => patchUi({ report: false }),
+    setReportBy: (reportBy) => patchUi({ reportBy }),
     toggleOverview: () => setUi((u) => ({ ...u, overviewOpen: !u.overviewOpen })),
 
     // Mission
