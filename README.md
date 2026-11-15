@@ -1,3 +1,8 @@
+# Sparkshield Stowage Fire-Risk Planner
+**NASA Space Apps Challenge 2026 · Flame in Freefall** · Team GitPushToTheMoon (Seattle)
+
+🔗 Live demo: https://flame-api-32147745125.us-west1.run.app
+
 # Flame in Freefall
 
 NASA Space Apps Challenge 2026: fire-safety insights from NASA microgravity combustion data
@@ -215,3 +220,14 @@ The `Procfile` provides the start command. Pass secrets as environment variables
 
 Data: NASA Physical Sciences Informatics (psi.nasa.gov) and NASA Technical Reports Server
 (ntrs.nasa.gov). Research aid only; not a safety certification.
+
+## Team GitPushToTheMoon
+
+| Name | Role | LinkedIn |
+|---|---|---|
+| Annie Xia | Product Manager & Designer | [annieyxia](https://www.linkedin.com/in/annieyxia) |
+| Talia Hijazi | Designer | [talia-hijazi](https://www.linkedin.com/in/talia-hijazi) |
+| Annie Boyd | Tech Lead & Backend Engineer | [annie-boyd1](https://www.linkedin.com/in/annie-boyd1) |
+| Jordan Napoleon | Frontend Engineer & Data Engineer | [jordan-agcaoili-napoleon](https://www.linkedin.com/in/jordan-agcaoili-napoleon) |
+| Subhasheni Venkatesh | Backend Engineer & Data Engineer | [subhasheni-venkatesh](https://www.linkedin.com/in/subhasheni-venkatesh) |
+| AJ Smadi | Subject Matter Expert | [a-j-smadi-61a72a3a0](https://www.linkedin.com/in/a-j-smadi-61a72a3a0) |
