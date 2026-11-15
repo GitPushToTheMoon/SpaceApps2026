@@ -1,3 +1,4 @@
+import logoUrl from '../../assets/sparkshield-logo.png';
 import { level5 } from '../../domain/levels';
 
 /** Small coloured status dot. */
@@ -5,13 +6,16 @@ export function Dot({ color, size = 8, square = false }) {
   return <span className="dot" style={{ width: size, height: size, background: color, borderRadius: square ? 2 : '50%' }} />;
 }
 
-/** Amber logo square with a ring. */
-export function BrandMark({ size = 30 }) {
-  return (
-    <div className="brand-mark" style={{ width: size, height: size }}>
-      <div className="brand-mark__ring" />
-    </div>
-  );
+/** SparkShield logo: wide in the header, inside a small tile for the agent avatar. */
+export function BrandMark({ avatar = false }) {
+  if (avatar) {
+    return (
+      <div className="agent-avatar">
+        <img src={logoUrl} alt="" />
+      </div>
+    );
+  }
+  return <img className="brand-logo" src={logoUrl} alt="SparkShield" />;
 }
 
 /** Room type code badge (e.g. "LAB"). */

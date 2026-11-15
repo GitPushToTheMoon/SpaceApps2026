@@ -9,8 +9,8 @@ export default function AppHeader({ planner }) {
         <div className="brand">
           <BrandMark />
           <div className="brand__text">
-            <div className="brand__title">Stowage Fire-Risk Planner</div>
-            <div className="brand__sub mono">FLAME IN FREEFALL · CRUISE + SURFACE</div>
+            <div className="brand__title">SparkShield</div>
+            <div className="brand__sub mono">STOWAGE FIRE-RISK PLANNER · CRUISE + SURFACE</div>
           </div>
         </div>
         <div className="spacer" />

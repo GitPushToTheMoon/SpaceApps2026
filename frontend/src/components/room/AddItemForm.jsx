@@ -36,7 +36,7 @@ export default function AddItemForm({ library, form, newMat, actions, onAdd }) {
       </div>
 
       <div className="row gap-10">
-        <button className="btn btn--amber" disabled={!ok} onClick={onAdd}>
+        <button className="btn btn--brand" disabled={!ok} onClick={onAdd}>
           Add item
         </button>
         <button className="link-btn" onClick={actions.toggleNewMaterial}>

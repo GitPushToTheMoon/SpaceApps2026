@@ -56,7 +56,7 @@ export default function AgentChat({ planner, tab }) {
               {acts.length > 0 && (
                 <div className="chat__acts">
                   {acts.map((x, j) => (
-                    <button key={j} className="btn btn--amber btn--xs" onClick={() => actions.applyAction(x.action)}>
+                    <button key={j} className="btn btn--brand btn--xs" onClick={() => actions.applyAction(x.action)}>
                       {x.label}
                     </button>
                   ))}
@@ -82,7 +82,7 @@ export default function AgentChat({ planner, tab }) {
             }
           }}
         />
-        <button className={`btn chat__send ${canSend ? 'btn--amber' : 'btn--muted'}`} onClick={() => actions.sendChat(chat.draft)}>
+        <button className={`btn chat__send ${canSend ? 'btn--brand' : 'btn--muted'}`} onClick={() => actions.sendChat(chat.draft)}>
           Send
         </button>
       </div>

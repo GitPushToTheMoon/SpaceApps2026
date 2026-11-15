@@ -19,7 +19,7 @@ export default function MovesTab({ moves, onApply }) {
             <span className="text-sm muted lh-14">{mv.reason}</span>
           </div>
           <span className="mono move-row__delta">{mv.delta}</span>
-          <button className="btn btn--amber btn--xs" onClick={() => onApply(mv.action)}>
+          <button className="btn btn--brand btn--xs" onClick={() => onApply(mv.action)}>
             Apply
           </button>
         </div>

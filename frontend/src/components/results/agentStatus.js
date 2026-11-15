@@ -12,7 +12,7 @@ export function agentStatus(agent, reqKey) {
 
   return {
     state,
-    dot: { run: COLORS.amber, err: COLORS.red, errOld: COLORS.red, stale: COLORS.amber, ok: COLORS.green, wait: COLORS.gray }[state],
+    dot: { run: COLORS.brand, err: COLORS.red, errOld: COLORS.red, stale: COLORS.brand, ok: COLORS.green, wait: COLORS.gray }[state],
     text: {
       run: 'Assessing…',
       err: 'Backend unreachable · no assessment yet',

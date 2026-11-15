@@ -45,7 +45,7 @@ export default function ModuleCard({ room, board, left, top, selected, locked, c
               <SafetyChip label="DET" has={s.det} needed={s.fuel > 0 || s.ign > 0} />
               <SafetyChip label="EXT" has={s.ext} needed={s.fuel > 0} />
               {tags.map((t) => (
-                <span key={t} className="chip-amber">
+                <span key={t} className="chip-brand">
                   {t}
                 </span>
               ))}

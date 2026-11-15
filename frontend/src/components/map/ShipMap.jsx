@@ -50,7 +50,7 @@ export default function ShipMap({ planner }) {
       </div>
       <ShipOverview board={board} open={ui.overviewOpen} onToggle={actions.toggleOverview} onSelect={actions.select} />
       <div className="map-hint">
-        <Dot size={7} color={locked ? COLORS.amber : COLORS.gray} />
+        <Dot size={7} color={locked ? COLORS.brand : COLORS.gray} />
         {hint}
       </div>
     </div>

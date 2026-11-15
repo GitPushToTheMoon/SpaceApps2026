@@ -290,7 +290,7 @@ No AI-generated images, video or audio are used, and no NASA branding appears in
 | Name | Role | LinkedIn |
 |---|---|---|
 | Annie Xia | Product Manager & Designer | [annieyxia](https://www.linkedin.com/in/annieyxia) |
-| Talia Hijazi | Designer | [talia-hijazi](https://www.linkedin.com/in/talia-hijazi) |
+| Talia Hijazi | Designer & User Researcher | [talia-hijazi](https://www.linkedin.com/in/talia-hijazi) |
 | Annie Boyd | Tech Lead & Backend Engineer | [annie-boyd1](https://www.linkedin.com/in/annie-boyd1) |
 | Jordan Napoleon | Frontend Engineer & Data Engineer | [jordan-agcaoili-napoleon](https://www.linkedin.com/in/jordan-agcaoili-napoleon) |
 | Subhasheni Venkatesh | Backend Engineer & Data Engineer | [subhasheni-venkatesh](https://www.linkedin.com/in/subhasheni-venkatesh) |
