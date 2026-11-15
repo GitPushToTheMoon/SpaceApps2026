@@ -481,9 +481,10 @@ Rules:
   levels; say so instead of implying strong data.
 - The score uses ONLY: material hazard at each phase's oxygen (from NASA tests), fuel load,
   ignition and oxygen sources (own room and neighbours), airflow, material thickness, and
-  detectors / extinguishers. Cabin pressure, EVA-prep periods, machinery heat and Li-ion
-  batteries are NOT scored: never give them as a reason for a score or a difference between
-  phases. You may mention one only by saying it is not scored. The surface phase differs from
+  detectors / extinguishers. Cabin pressure, EVA-prep periods, the amount of machinery heat
+  and whether Li-ion packs are bagged are NOT scored: never give them as a reason for a score or
+  a difference between phases. You may mention one only by saying it is not scored. A Li-ion pack
+  or hot machine still counts as an ignition source, and you may name it as one. The surface phase differs from
   cruise because of its oxygen level.
 - {gravity_note}
 - Launch is out of scope. This is a planning aid, not a safety certification.
@@ -522,8 +523,9 @@ If the answer isn't there, say our dataset doesn't contain it. Items with eviden
 have no NASA tests: their score is an estimate from the item's flammability level.
 The score uses only: material hazard at each phase's oxygen (NASA tests), fuel load, ignition and
 oxygen sources, airflow, material thickness, detectors and extinguishers. Cabin pressure, EVA-prep
-periods, machinery heat and Li-ion batteries are NOT scored: never give them as a reason for a
-score; mention them only by saying they are not scored.
+periods, the amount of machinery heat and whether Li-ion packs are bagged are NOT scored: never
+give them as a reason for a score; mention them only by saying they are not scored. A Li-ion pack
+or hot machine still counts as an ignition source.
 
 If you recommend changes, include them as actions using ids from the ship data:
   {{"type":"swap","room_id","item_id","to":"<the item's swap_to key>"}}

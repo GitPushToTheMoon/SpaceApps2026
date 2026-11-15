@@ -320,6 +320,14 @@ def test_unscored_cause_is_fine_when_marked_not_scored(monkeypatch):
     assert assess(load("iss_moon"))["text_source"] == "ai"
 
 
+def test_li_ion_pack_as_ignition_source_is_fine(monkeypatch):
+    # Li-ion packs and hot machines are scored as ignition sources, so naming them is allowed
+    monkeypatch.setattr(ai, "planner_text", lambda *a, **k: {
+        "summary": "Surface is worse because of its higher oxygen. The Li-ion battery pack in crew "
+                   "quarters is an ignition source, and the food warmer gives off heat.", "rooms": {}, "fixes": {}})
+    assert assess(load("iss_moon"))["text_source"] == "ai"
+
+
 def test_moves_never_target_high_rooms():
     for name in ("iss_moon", "transit_mars"):
         body = load(name)
