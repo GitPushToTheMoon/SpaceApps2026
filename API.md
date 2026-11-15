@@ -171,7 +171,7 @@ Request = the prototype's `agentInput()` JSON, **plus each item's library `key`*
 {
   "conditions": {
     "cruise":  { "gravity_g": 0, "pressure_psia": 14.7, "o2_percent": 21, "ventilation": "normal", "cruise_days": 180 },
-    "surface": { "body": "Moon", "gravity_g": 0.166, "pressure_psia": 10.2, "o2_percent": 30,
+    "surface": { "body": "Moon", "gravity_g": 0.166, "pressure_psia": 10.2, "o2_percent": 26.5,
                  "stay_days": 30, "eva_prep_periods_high_o2": 4 }
   },
   "out_of_scope": ["launch"],
@@ -185,14 +185,16 @@ Request = the prototype's `agentInput()` JSON, **plus each item's library `key`*
 }
 ```
 - `surface: null` = cruise only. `ventilation: "reduced"` halves every space's cruise airflow.
+- Surface atmospheres in the UI are NASA reference values: 14.7 psia / 21%, 10.2 psia / 26.5%
+  (Shuttle staged EVA, ISS campout; the default) and 8.2 psia / 34% (NASA exploration atmosphere).
 - Extra fields (`baseline`, `swap_to`, `test_dataset`, `bagged`) are accepted and ignored or used.
 - Space ids must be unique; `cm` needs 3 numbers. Bad input returns **422**.
 
 Response (phases are `cruise` and `surf`, as in the handoff):
 ```json
 {
-  "overall": { "score": 60.2, "level": "High", "driver": "surf", "summary": "two sentences" },
-  "phases":  { "cruise": { "score": 50.1, "level": "Elevated" }, "surf": { "score": 65.4, "level": "High" } },
+  "overall": { "score": 60.0, "level": "Elevated", "driver": "surf", "summary": "two sentences" },
+  "phases":  { "cruise": { "score": 50.1, "level": "Elevated" }, "surf": { "score": 65.2, "level": "High" } },
   "rooms": [{
     "id": "n7", "name": "Quest Airlock", "stocked": true,
     "cruise": 51.3, "surf": 62.5, "overall": 58.7,
@@ -208,7 +210,7 @@ Response (phases are `cruise` and `surf`, as in the handoff):
   "factors": [{ "key": "material", "name": "Material hazard (NASA test data)", "weight": 0.45,
                 "cruise": { "avg": 0, "min": 0, "max": 0 }, "surf": { "avg": 0, "min": 0, "max": 0 } }],
   "moves": [{ "item_id": "n6", "item": "Polyurethane foam", "qty": 1, "from_id": "n7", "from_name": "Quest Airlock",
-              "to_id": "n2", "to_name": "PMM Stowage & Logistics", "reason": "…", "points": 2.2 }],
+              "to_id": "n2", "to_name": "PMM Stowage & Logistics", "reason": "…", "points": 2.0 }],
   "data_gaps": ["…"],
   "text_source": "ai",
   "input_hash": "a1b2c3d4e5f60718",

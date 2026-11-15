@@ -254,8 +254,8 @@ def api_chat(req: ChatRequest):
     for attempt in range(2):
         try:
             raw = ai.planner_chat(req.tab, history, ship, compact, _gravity(ship))
-        except ai.AIUnavailable as e:
-            print(f"[api/chat] AI unavailable: {e}")
+        except Exception as e:  # AIUnavailable, bad key, quota... the frontend shows "could not be reached"
+            print(f"[api/chat] AI unavailable: {e!r}")
             raise HTTPException(503, "The agent could not be reached. Try again in a moment.")
         reply = str((raw or {}).get("reply") or "").strip()
         if reply and risk.all_numbers_ok(reply, allowed)[0]:

@@ -105,9 +105,10 @@ export function usePlanner({ initialLayout = 'iss', cardDetail = 'Full', riskCol
     const push = (m) => setChat((c) => ({ ...c, threads: { ...c.threads, [tab]: [...(c.threads[tab] || []), m] }, busy: null }));
     try {
       const input = AgentService.buildInput(layout, mission, library);
-      const reply = await agentService.chat({ tab, thread, input, assessment: agent.result });
+      const reply = await agentService.chat({ tab, thread, input });
       push({ role: 'agent', text: reply.text, actions: reply.actions });
     } catch {
+      // 503 = the AI is unreachable; anything else = the backend is down
       push({ role: 'agent', text: 'The agent could not be reached. Try again in a moment.', actions: [] });
     }
   }

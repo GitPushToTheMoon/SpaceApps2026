@@ -1,31 +1,38 @@
-import { CHAT_TABS, FLAMMABILITY } from '../domain/constants';
-import { RiskEngine } from '../domain/RiskEngine';
-import { arr, parseJSON } from '../domain/utils';
-import { ASSESS_SYSTEM_PROMPT, chatSystemPrompt } from './agentPrompts';
+import { FLAMMABILITY } from '../domain/constants';
+import { arr } from '../domain/utils';
+import { API_BASE } from './config';
 
 /**
- * Talks to the LLM through your backend.
- * Expects:  POST /api/agent/complete  { system, messages, max_tokens }  ->  { text }
+ * Talks to the FastAPI backend's stowage planner:
+ *   POST /api/assess  -> scores, fixes and moves (computed by code from NASA test data;
+ *                        the AI only writes the summary and explanations)
+ *   POST /api/chat    -> one chat turn about a results tab
+ *
+ * The frontend never scores anything itself and never talks to the AI directly.
+ * Backend phase names are "cruise"/"surf"; this file converts them to the
+ * frontend's "pre"/"surf" so the components don't change.
  */
 export class AgentService {
-  constructor({ endpoint = '/api/agent/complete' } = {}) {
-    this.endpoint = endpoint;
+  constructor({ baseUrl = API_BASE } = {}) {
+    this.baseUrl = baseUrl;
   }
 
-  async complete({ system, messages, maxTokens = 1000 }) {
-    const res = await fetch(this.endpoint, {
+  async _post(path, body) {
+    const res = await fetch(`${this.baseUrl}${path}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ system, messages, max_tokens: maxTokens }),
+      body: JSON.stringify(body),
     });
-    if (!res.ok) throw new Error(`Agent request failed: ${res.status}`);
-    const data = await res.json();
-    return data.text ?? '';
+    if (!res.ok) {
+      const err = new Error(`${path} failed: ${res.status}`);
+      err.status = res.status;
+      throw err;
+    }
+    return res.json();
   }
 
-  /** The JSON the agent sees: conditions + every space with its items and baseline. */
+  /** The request body for /api/assess (the handoff's agent input, plus each item's library key). */
   static buildInput(layout, mission, library) {
-    const engine = new RiskEngine(library, mission);
     const A = mission.atmosphere;
     const B = mission.destination;
     return {
@@ -42,13 +49,13 @@ export class AgentService {
         airflow_cm_s: r.airflow,
         capacity_kg: r.capacity,
         neighbours: layout.neighboursOf(r).map((o) => o.id),
-        baseline: { cruise: engine.score(r, 'pre'), surf: engine.score(r, 'surf') },
         items: r.items.map((i) => {
           const m = library.get(i.lib) || {};
           const o = {
             id: i.id,
-            name: m.name,
-            category: m.cat,
+            key: i.lib,
+            name: m.name || i.lib,
+            category: m.cat || 'material',
             flammability: m.flam ? FLAMMABILITY[m.flam] : null,
             ignition_source: !!m.ign,
             oxygen_source: !!m.oxy,
@@ -58,41 +65,63 @@ export class AgentService {
           if (m.liion) o.bagged = !!m.bagged;
           if (m.liion && !m.bagged) o.swap_to = 'liionbag';
           else if (m.swap) o.swap_to = m.swap;
-          if (m.ds) o.test_dataset = { state: m.ds.state, tests: m.ds.tests };
           return o;
         }),
       })),
     };
   }
 
-  /** Full-ship assessment. Returns { summary, rooms, factors, moves }. */
-  async assess(input) {
-    const text = await this.complete({
-      system: ASSESS_SYSTEM_PROMPT,
-      messages: [{ role: 'user', content: JSON.stringify(input) }],
-      maxTokens: 4000,
-    });
-    const j = parseJSON(text);
-    if (!j || !Array.isArray(j.rooms)) throw new Error('Unreadable response');
-    return { summary: j.overall?.summary || '', rooms: arr(j.rooms), factors: arr(j.factors), moves: arr(j.moves) };
+  /** Converts the /api/assess response to the shape ScoreBoard reads ("pre" = cruise). */
+  static normalise(j) {
+    const ph = j.phases || {};
+    const phase = (p) => (p ? { avg: p.avg, min: p.min, max: p.max } : null);
+    return {
+      summary: j.overall?.summary || '',
+      ship: {
+        pre: ph.cruise?.score ?? null,
+        surf: ph.surf?.score ?? null,
+        overall: j.overall?.score ?? null,
+        driver: j.overall?.driver === 'cruise' ? 'pre' : 'surf',
+      },
+      rooms: arr(j.rooms).map((r) => ({
+        id: r.id,
+        stocked: r.stocked,
+        pre: r.cruise,
+        surf: r.surf,
+        overall: r.overall,
+        rationale: r.rationale || '',
+        fixes: arr(r.fixes).map((f) => ({ title: f.title, why: f.why, points: f.points, action: f.action || null })),
+        factors: { pre: r.factors?.cruise || {}, surf: r.factors?.surf || {} },
+        items: arr(r.items),
+      })),
+      factors: arr(j.factors).map((f) => ({ key: f.key, name: f.name, pre: phase(f.cruise), surf: phase(f.surf) })),
+      moves: arr(j.moves),
+      dataGaps: arr(j.data_gaps),
+      textSource: j.text_source,
+      inputHash: j.input_hash,
+      disclaimer: j.disclaimer || '',
+    };
   }
 
-  /** Chat about one results tab. Returns { text, actions }. */
-  async chat({ tab, thread, input, assessment }) {
-    const system = chatSystemPrompt(CHAT_TABS[tab].name, input, assessment);
-    const messages = thread.map((m) => ({
-      role: m.role === 'user' ? 'user' : 'assistant',
-      content: m.role === 'user' ? m.text : JSON.stringify({ reply: m.text, actions: m.actions || [] }),
-    }));
-    const text = await this.complete({ system, messages, maxTokens: 1000 });
-    const j = parseJSON(text);
-    return { text: j?.reply || text, actions: j ? arr(j.actions) : [] };
+  /** Full-ship assessment. */
+  async assess(input) {
+    return AgentService.normalise(await this._post('/api/assess', input));
+  }
+
+  /** Chat about one results tab. Returns { text, actions }. 503 = agent unreachable (throws). */
+  async chat({ tab, thread, input }) {
+    const j = await this._post('/api/chat', {
+      tab,
+      messages: thread.map((m) => ({ role: m.role === 'user' ? 'user' : 'agent', text: m.text, actions: arr(m.actions) })),
+      assessment_input: input,
+    });
+    return { text: j.reply, actions: arr(j.actions) };
   }
 }
 
-/** No backend yet: every call fails, so the UI shows the baseline heuristics. */
+/** No backend: every call fails, so the UI shows "Backend unreachable". */
 export class MockAgentService extends AgentService {
-  async complete() {
-    throw new Error('Agent not connected yet');
+  async _post() {
+    throw new Error('Backend not connected (VITE_USE_MOCK_AGENT=true)');
   }
 }

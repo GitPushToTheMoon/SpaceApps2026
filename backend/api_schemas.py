@@ -35,7 +35,7 @@ class SurfaceConditions(In):
     body: Literal["Moon", "Mars"] = "Moon"
     gravity_g: float = Field(0.166, ge=0, le=1.5)
     pressure_psia: float = Field(10.2, gt=0, le=50)
-    o2_percent: float = Field(30, ge=0, le=100)
+    o2_percent: float = Field(26.5, ge=0, le=100)
     stay_days: float = Field(30, ge=0, le=100000)
     eva_prep_periods_high_o2: int = Field(0, ge=0, le=1000)
 
