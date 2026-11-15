@@ -205,7 +205,8 @@ Response (phases are `cruise` and `surf`, as in the handoff):
                 "action": { "type": "swap", "room_id": "n7", "item_id": "n6", "to": "melamine" } }],
     "factors": { "cruise": { "material": 50.0, "fuel": 14.3, "sources": 67.0, "airflow": 20.0, "thickness": 35.0 }, "surf": { } },
     "items": [{ "id": "n6", "name": "Polyurethane foam", "material_key": null,
-                "hazard": { "cruise": 70.0, "surf": 95.0 }, "evidence": "none", "basis": "…" }]
+                "hazard": { "cruise": 70.0, "surf": 95.0 }, "evidence": "none", "basis": "…",
+                "n_tests": 0, "threshold_pct": null, "gap": "no NASA test data; score is an estimate" }]
   }],
   "factors": [{ "key": "material", "name": "Material hazard (NASA test data)", "weight": 0.45,
                 "cruise": { "avg": 0, "min": 0, "max": 0 }, "surf": { "avg": 0, "min": 0, "max": 0 } }],
@@ -248,11 +249,21 @@ appended to `data/assessments.jsonl` (input + result, for M&P traceability).
 - `tab`: `overall` | `factors` | `moves` | `table`. Keep one thread per tab and send the
   whole thread; agent turns go back as `{ "role": "agent", "text", "actions" }`.
   Only the last 10 messages are used.
-- Response: `{ "reply": "…", "actions": [ { ...action, "label": "Swap X → Y", "points": 1.4 } ], "text_source": "ai" }`.
+- Response: `{ "reply": "…", "actions": [ { ...action, "label": "Swap X → Y", "points": 1.4 } ], "citations": [ … ], "text_source": "ai" }`.
+- **Citations:** Gemini also gets individual verified experiments from `experiments.csv` (per
+  material: the tests that set the burn threshold, plus the closest burned / went-out tests to
+  each phase's oxygen), with id, conditions, outcome and NASA PSI source. It cites them in the
+  reply as `[PSI-99-2-9]`; `citations` lists each cited test:
+  `{ "id": "PSI-99-2-9", "material": "PMMA", "investigation": "PSI-99 Spacecraft Fire Experiment-II", "source_url": "https://psi.nasa.gov/…/PSI-99" }`.
+  A reply citing an id or URL that isn't in that list is rejected.
   Actions are checked against the ship (unknown ids, wrong swap, duplicate add, move into a
   passage are dropped) and `points` is the real drop in the ship's overall score.
-- A reply with a wrong number is retried once, then replaced with a short "couldn't answer"
-  message (`text_source: "fallback"`).
+- Gemini gets the scores plus our dataset: every material's verified test count, investigations,
+  oxygen range tested, burned / did-not-burn counts and burn threshold, and each room's items
+  with their test counts and evidence. It must answer data questions only from that.
+- Every number in a reply must exist in that data, and in context: "N tests" must be a real
+  test count and "N%" a real oxygen level or threshold. A reply that fails is retried once,
+  then replaced with a short "couldn't answer" message (`text_source: "fallback"`).
 - **503** if Gemini is unreachable: show "The agent could not be reached. Try again in a moment."
 
 ### Applying an action (frontend)

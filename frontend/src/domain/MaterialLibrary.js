@@ -44,12 +44,22 @@ export class MaterialLibrary {
     const b = this.base;
     const groups = [
       {
-        label: 'Materials',
-        options: b.filter((l) => l.cat === 'material' && !l.ds).map((l) => ({ key: l.key, label: `${l.name} · ${FLAMMABILITY[l.flam]}` })),
+        label: 'Materials (no NASA tests: score is an estimate)',
+        options: b
+          .filter((l) => l.cat === 'material' && !(l.ds && l.ds.tests > 0))
+          .map((l) => ({
+            key: l.key,
+            label: l.ds ? `${l.name} — ${l.ds.plain} · ${FLAMMABILITY[l.flam]} · PSI material, no tests yet` : `${l.name} · ${FLAMMABILITY[l.flam]}`,
+          })),
       },
       {
-        label: 'Test dataset (PSI)',
-        options: b.filter((l) => l.ds).map((l) => ({ key: l.key, label: `${l.name} — ${l.ds.plain} · ${l.ds.tests} tests` })),
+        label: 'NASA test data (PSI)',
+        options: b
+          .filter((l) => l.ds && l.ds.tests > 0)
+          .map((l) => ({
+            key: l.key,
+            label: `${l.name} — ${l.ds.plain} · ${l.ds.tests} test${l.ds.tests === 1 ? '' : 's'}${l.ds.tests < 5 ? ' (limited)' : ''}`,
+          })),
       },
     ];
     if (this.custom.length) {

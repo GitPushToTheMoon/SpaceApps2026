@@ -117,6 +117,9 @@ class ItemEvidence(BaseModel):
     hazard: Dict[Phase, float] = Field(..., description="Material hazard 0-100 per phase")
     evidence: Literal["strong", "limited", "none"]
     basis: str
+    n_tests: int = Field(0, description="Verified NASA tests of this material in our dataset")
+    threshold_pct: Optional[float] = Field(None, description="Burn threshold (% oxygen) from the tests")
+    gap: Optional[str] = None
 
 
 class Room(BaseModel):
@@ -193,7 +196,16 @@ class ChatAction(Action):
     points: float = Field(..., description="How much the ship's overall score would drop")
 
 
+class Citation(BaseModel):
+    id: str = Field(..., description="Experiment id from experiments.csv, e.g. PSI-99-2-9")
+    material: str
+    investigation: str
+    source_url: str
+
+
 class ChatResponse(BaseModel):
     reply: str
     actions: List[ChatAction]
+    citations: List[Citation] = Field(default_factory=list,
+                                      description="Experiments the reply cites, with their NASA PSI source")
     text_source: Literal["ai", "fallback"]

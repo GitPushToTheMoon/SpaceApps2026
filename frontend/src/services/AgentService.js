@@ -108,14 +108,14 @@ export class AgentService {
     return AgentService.normalise(await this._post('/api/assess', input));
   }
 
-  /** Chat about one results tab. Returns { text, actions }. 503 = agent unreachable (throws). */
+  /** Chat about one results tab. Returns { text, actions, citations }. 503 = agent unreachable (throws). */
   async chat({ tab, thread, input }) {
     const j = await this._post('/api/chat', {
       tab,
       messages: thread.map((m) => ({ role: m.role === 'user' ? 'user' : 'agent', text: m.text, actions: arr(m.actions) })),
       assessment_input: input,
     });
-    return { text: j.reply, actions: arr(j.actions) };
+    return { text: j.reply, actions: arr(j.actions), citations: arr(j.citations) };
   }
 }
 

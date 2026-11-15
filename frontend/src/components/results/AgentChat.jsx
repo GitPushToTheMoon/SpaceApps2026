@@ -40,6 +40,19 @@ export default function AgentChat({ planner, tab }) {
           return (
             <div key={i} className={`chat__msg ${isUser ? 'is-user' : 'is-agent'}`}>
               <div className="chat__bubble">{m.text}</div>
+              {arr(m.citations).length > 0 && (
+                <div className="chat__sources text-xs muted">
+                  Sources:{' '}
+                  {arr(m.citations).map((c, j) => (
+                    <span key={c.id}>
+                      {j > 0 && ' · '}
+                      <a href={c.source_url} target="_blank" rel="noreferrer" title={`${c.material} · ${c.investigation}`}>
+                        {c.id}
+                      </a>
+                    </span>
+                  ))}
+                </div>
+              )}
               {acts.length > 0 && (
                 <div className="chat__acts">
                   {acts.map((x, j) => (

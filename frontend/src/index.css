@@ -288,6 +288,8 @@ select.input { padding: 0 8px; }
 .is-user .chat__bubble { background: var(--ink); color: #fff; border-radius: 10px 10px 2px 10px; }
 .is-agent .chat__bubble { background: #f3f3f0; color: var(--ink); border-radius: 10px 10px 10px 2px; }
 .chat__acts { display: flex; flex-wrap: wrap; gap: 6px; max-width: 78%; }
+.chat__sources { max-width: 78%; }
+.chat__sources a { color: inherit; text-decoration: underline; }
 .chat__composer { padding: 10px 12px; border-top: 1px solid var(--line-soft); display: flex; gap: 8px; }
 .chat__input { height: 38px; border-radius: 7px; padding: 0 12px; }
 .chat__send { height: 38px; padding: 0 16px; border-radius: 7px; }

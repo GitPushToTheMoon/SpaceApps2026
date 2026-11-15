@@ -725,7 +725,10 @@
               "surf": 94.0
             },
             "evidence": "none",
-            "basis": "no NASA test data; estimate from the item's flammability level"
+            "basis": "no NASA test data; estimate from the item's flammability level",
+            "n_tests": 0,
+            "threshold_pct": null,
+            "gap": "no NASA test data; score is an estimate"
           },
           {
             "id": "n2",
@@ -736,7 +739,10 @@
               "surf": 95.0
             },
             "evidence": "none",
-            "basis": "no NASA test data; estimate from the item's flammability level"
+            "basis": "no NASA test data; estimate from the item's flammability level",
+            "n_tests": 0,
+            "threshold_pct": null,
+            "gap": "no NASA test data; score is an estimate"
           }
         ]
       },
@@ -824,7 +830,10 @@
               "surf": 95.0
             },
             "evidence": "none",
-            "basis": "no NASA test data; estimate from the item's flammability level"
+            "basis": "no NASA test data; estimate from the item's flammability level",
+            "n_tests": 0,
+            "threshold_pct": null,
+            "gap": "no NASA test data; score is an estimate"
           }
         ]
       },
@@ -897,7 +906,10 @@
               "surf": 94.0
             },
             "evidence": "none",
-            "basis": "no NASA test data; estimate from the item's flammability level"
+            "basis": "no NASA test data; estimate from the item's flammability level",
+            "n_tests": 0,
+            "threshold_pct": null,
+            "gap": "no NASA test data; score is an estimate"
           },
           {
             "id": "n10",
@@ -908,7 +920,10 @@
               "surf": 95.0
             },
             "evidence": "none",
-            "basis": "no NASA test data; estimate from the item's flammability level"
+            "basis": "no NASA test data; estimate from the item's flammability level",
+            "n_tests": 0,
+            "threshold_pct": null,
+            "gap": "no NASA test data; score is an estimate"
           }
         ]
       },
@@ -950,7 +965,10 @@
               "surf": 90.8
             },
             "evidence": "limited",
-            "basis": "burned from 21.9%, went out at 20.9% or below"
+            "basis": "burned from 21.9%, went out at 20.9% or below",
+            "n_tests": 27,
+            "threshold_pct": 21.4,
+            "gap": "no tests within 3% of 26.5% oxygen"
           }
         ]
       },
@@ -964,7 +982,7 @@
         "cruise_level": "Low",
         "surf_level": "Elevated",
         "level": "Guarded",
-        "rationale": "Main drivers: ignition and oxygen sources and material hazard (NASA test data). Some items have no NASA test data.",
+        "rationale": "Main drivers: ignition and oxygen sources and material hazard (NASA test data). Some items have no NASA test data. Unbagged Li-ion battery present (battery hazard is not scored).",
         "fixes": [
           {
             "title": "Add a portable extinguisher",
@@ -1008,7 +1026,10 @@
               "surf": 60.0
             },
             "evidence": "none",
-            "basis": "no NASA test data; estimate from the item's flammability level"
+            "basis": "no NASA test data; estimate from the item's flammability level",
+            "n_tests": 0,
+            "threshold_pct": null,
+            "gap": "no NASA test data; score is an estimate"
           }
         ]
       },
@@ -1096,7 +1117,10 @@
               "surf": 95.0
             },
             "evidence": "none",
-            "basis": "no NASA test data; estimate from the item's flammability level"
+            "basis": "no NASA test data; estimate from the item's flammability level",
+            "n_tests": 0,
+            "threshold_pct": null,
+            "gap": "no NASA test data; score is an estimate"
           }
         ]
       },
@@ -1154,7 +1178,10 @@
               "surf": 60.0
             },
             "evidence": "none",
-            "basis": "no NASA test data; estimate from the item's flammability level"
+            "basis": "no NASA test data; estimate from the item's flammability level",
+            "n_tests": 0,
+            "threshold_pct": null,
+            "gap": "no NASA test data; score is an estimate"
           }
         ]
       }
@@ -1308,7 +1335,7 @@
     ],
     "text_source": "template",
     "input_hash": "9e4a5f391ceb2764",
-    "assessed_at": "2026-11-15T00:00:35+00:00",
+    "assessed_at": "2026-11-15T00:06:25+00:00",
     "disclaimer": "Research aid based on NASA microgravity experiments. Not a safety certification."
   },
   "POST /api/chat request (assessment_input = the /api/assess request)": {

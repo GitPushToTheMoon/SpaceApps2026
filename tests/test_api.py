@@ -210,3 +210,93 @@ def test_other_endpoints_still_exist():
               "/library", "/api/assess", "/api/chat"):
         assert p in paths
     assert "/stowage/assess" not in paths
+
+
+# ------------------------------------------------------------------ dataset accuracy
+
+def test_items_report_real_test_counts():
+    j = assess(load("iss_moon"))
+    lab = next(r for r in j["rooms"] if r["name"] == "Destiny Lab")
+    pmma = next(i for i in lab["items"] if i["material_key"] == "PMMA")
+    assert pmma["n_tests"] == 27 and pmma["threshold_pct"] == 21.4
+    assert pmma["gap"]  # no PMMA tests near 26.5% oxygen
+    cotton = next(i for r in j["rooms"] for i in r["items"] if i["name"] == "Cotton clothing")
+    assert cotton["n_tests"] == 0 and cotton["evidence"] == "none"
+
+
+def test_nasa_dataset_summary_matches_csv():
+    summary = {m["material"]: m for m in api.nasa_data_summary()}
+    assert summary["PMMA"]["tests"] == 27 and sum(summary["PMMA"]["by_investigation"].values()) == 27
+    assert summary["Nomex"]["tests"] == 1
+    for name in ("cotton fabric", "Ultem", "wax-fiberglass", "heptane-isooctane"):
+        assert summary[name]["tests"] == 0
+
+
+def test_wrong_test_count_is_rejected_even_if_number_exists_elsewhere(monkeypatch):
+    # 14 is a real number in this ship (Destiny Lab airflow), but not a PMMA test count
+    monkeypatch.setattr(ai, "planner_chat", lambda *a, **k: {"reply": "PMMA has 14 tests in our data.", "actions": []})
+    j = client.post("/api/chat", json=chat_body()).json()
+    assert j["text_source"] == "fallback"
+    monkeypatch.setattr(ai, "planner_chat",
+                        lambda *a, **k: {"reply": "PMMA has 27 tests: 24 from BASS-II and 3 from Saffire-II.", "actions": []})
+    j = client.post("/api/chat", json=chat_body()).json()
+    assert j["text_source"] == "ai"
+
+
+def test_chat_gets_the_dataset(monkeypatch):
+    seen = {}
+
+    def spy(tab, history, ship, result, g=0):
+        seen["result"] = result
+        return {"reply": "ok", "actions": []}
+    monkeypatch.setattr(ai, "planner_chat", spy)
+    client.post("/api/chat", json=chat_body())
+    names = {m["material"] for m in seen["result"]["nasa_dataset"]}
+    assert {"PMMA", "methanol", "Nomex"} <= names
+    crew = next(r for r in seen["result"]["rooms"] if r["name"] == "Node 2 Crew Quarters")
+    assert crew["unbagged_li_ion"] and "Laptop" in crew["ignition_sources"]
+
+
+def test_assessment_text_with_wrong_test_count_falls_back(monkeypatch):
+    monkeypatch.setattr(ai, "planner_text", lambda *a, **k: {"summary": "PMMA has 14 tests.", "rooms": {}, "fixes": {}})
+    assert assess(load("iss_moon"))["text_source"] == "template"
+
+
+def test_template_mentions_unscored_battery():
+    j = assess(load("iss_moon"))
+    crew = next(r for r in j["rooms"] if r["name"] == "Node 2 Crew Quarters")
+    assert "Li-ion" in crew["rationale"]
+
+
+# ------------------------------------------------------------------ citations
+
+def test_chat_gets_individual_tests_including_the_threshold_ones(monkeypatch):
+    seen = {}
+
+    def spy(tab, history, ship, result, g=0):
+        seen["result"] = result
+        return {"reply": "ok", "actions": []}
+    monkeypatch.setattr(ai, "planner_chat", spy)
+    client.post("/api/chat", json=chat_body())
+    pmma = {t["id"]: t for t in seen["result"]["nasa_tests"] if t["material"] == "PMMA"}
+    assert "PSI-99-2-9" in pmma                      # lowest oxygen PMMA burned at (21.9%)
+    assert pmma["PSI-99-2-9"]["source_url"].startswith("https://psi.nasa.gov/")
+    assert any(t["outcome_category"] != "burned" for t in pmma.values())
+
+
+def test_valid_citation_is_returned_with_source(monkeypatch):
+    monkeypatch.setattr(ai, "planner_chat", lambda *a, **k: {
+        "reply": "PMMA burned at 21.9% oxygen [PSI-99-2-9], so 26.5% is above its threshold.", "actions": []})
+    j = client.post("/api/chat", json=chat_body()).json()
+    assert j["text_source"] == "ai"
+    assert j["citations"] == [{"id": "PSI-99-2-9", "material": "PMMA",
+                               "investigation": "PSI-99 Spacecraft Fire Experiment-II",
+                               "source_url": "https://psi.nasa.gov/physci/repo/data/investigations/PSI-99"}]
+
+
+def test_invented_citation_or_url_is_rejected(monkeypatch):
+    for reply in ("PMMA burned at 21.9% oxygen [PSI-99-2-42].",
+                  "See https://example.com/pmma-fire for details."):
+        monkeypatch.setattr(ai, "planner_chat", lambda *a, r=reply, **k: {"reply": r, "actions": []})
+        j = client.post("/api/chat", json=chat_body()).json()
+        assert j["text_source"] == "fallback" and j["citations"] == []
