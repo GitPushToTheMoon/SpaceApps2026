@@ -11,6 +11,8 @@ export default function ModuleCard({ room, board, left, top, selected, locked, c
   const s = board.stats(room);
   const score = board.scores(room).overall;
   const L = level5(score);
+  // A stocked module with no score yet is waiting for the backend, not empty.
+  const levelLabel = score == null && room.isStocked ? 'Assessing…' : L.label;
   const tags = [];
   if (s.heat >= 25 || s.ign >= 2) tags.push('Hot electronics');
   if (s.oxy) tags.push('O₂ outlet');
@@ -58,7 +60,7 @@ export default function ModuleCard({ room, board, left, top, selected, locked, c
         <div className="module__foot">
           <span className="row gap-5 module__level">
             <Dot color={L.color} />
-            {L.label}
+            {levelLabel}
           </span>
           <span className="mono module__score">{score ?? '—'}</span>
         </div>
