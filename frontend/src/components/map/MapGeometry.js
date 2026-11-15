@@ -10,8 +10,7 @@ export class MapGeometry {
 
   constructor(layout) {
     this.layout = layout;
-    this.slots = layout.emptySlots();
-    const pts = [...layout.rooms, ...this.slots];
+    const pts = layout.rooms.length ? layout.rooms : [{ x: 0, y: 0 }];
     this.minX = Math.min(...pts.map((p) => p.x));
     this.maxX = Math.max(...pts.map((p) => p.x));
     this.minY = Math.min(...pts.map((p) => p.y));

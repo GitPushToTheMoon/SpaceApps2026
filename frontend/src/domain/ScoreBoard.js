@@ -88,7 +88,7 @@ export class ScoreBoard {
   }
 
   counts() {
-    const rooms = this.layout.rooms;
+    const rooms = this.layout.modules;
     const st = (r) => this.stats(r);
     const total = (k) => sum(rooms.map((r) => st(r)[k]));
     const missDet = rooms.filter((r) => (st(r).fuel || st(r).ign) && !st(r).det).length;
@@ -155,7 +155,7 @@ export class ScoreBoard {
   }
 
   tableRows() {
-    const rows = [...this.ranked, ...this.layout.rooms.filter((r) => !this.ranked.includes(r))];
+    const rows = [...this.ranked, ...this.layout.modules.filter((r) => !this.ranked.includes(r))];
     return rows.map((room) => {
       const sc = this.scores(room);
       const ar = this.agentRoom(room);

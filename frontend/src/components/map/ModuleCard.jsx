@@ -7,7 +7,7 @@ function SafetyChip({ label, has, needed }) {
   return <span className={`safety-chip safety-chip--${state} mono`}>{label}</span>;
 }
 
-export default function ModuleCard({ room, board, left, top, selected, locked, colouring, detail, isDragging, onSelect, onDragStart, onDragEnd }) {
+export default function ModuleCard({ room, board, left, top, selected, locked, colouring, detail, isDragging, onSelect, onDragStart, onDragEnd, drop = {} }) {
   const s = board.stats(room);
   const score = board.scores(room).overall;
   const L = level5(score);
@@ -28,6 +28,7 @@ export default function ModuleCard({ room, board, left, top, selected, locked, c
       }}
       onDragEnd={onDragEnd}
       onClick={() => onSelect(room.id)}
+      {...drop}
     >
       <div className="module__stripe" style={{ background: room.color }} />
       <div className="module__body">

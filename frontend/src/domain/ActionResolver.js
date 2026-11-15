@@ -29,14 +29,14 @@ export class ActionResolver {
     }
     if (a.type === 'add') {
       const room = L.find(a.room_id);
-      if (!room || !SAFETY_ITEMS[a.key] || room.hasItem(a.key)) return null;
+      if (!room || room.isBay || !SAFETY_ITEMS[a.key] || room.hasItem(a.key)) return null;
       return `Add ${lib.name(a.key).toLowerCase()} to ${room.name}`;
     }
     if (a.type === 'move') {
       const from = L.find(a.from_id);
       const to = L.find(a.to_id);
       const item = from?.findItem(a.item_id);
-      if (!item || !to || from.id === to.id) return null;
+      if (!item || !to || from.id === to.id || to.isBay || to.isPassage) return null;
       return `Move ${lib.name(item.lib)} to ${to.name}`;
     }
     return null;

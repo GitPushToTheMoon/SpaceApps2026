@@ -1,14 +1,9 @@
 import { Room } from './Room';
 
-const DIRS = [
-  [1, 0],
-  [-1, 0],
-  [0, 1],
-  [0, -1],
-];
-
 /**
- * The whole ship: a collection of Rooms on a grid. Immutable.
+ * The whole ship: a fixed hull of grid cells. Each cell is a module (Room) or an
+ * empty bay (a Room of type BAY). The hull never grows: modules can be retyped,
+ * cleared back to a bay, or swapped with another cell. Immutable.
  */
 export class ShipLayout {
   constructor(rooms = []) {
@@ -27,40 +22,29 @@ export class ShipLayout {
   get stocked() {
     return this.rooms.filter((r) => r.isStocked);
   }
+  /** Real spaces (not empty bays): what gets scored and shown in tables. */
+  get modules() {
+    return this.rooms.filter((r) => !r.isBay);
+  }
+  get bays() {
+    return this.rooms.filter((r) => r.isBay);
+  }
   find(id) {
     return this.rooms.find((r) => r.id === id) || null;
   }
   neighboursOf(room) {
-    return this.rooms.filter((o) => room.isAdjacentTo(o));
+    return this.modules.filter((o) => room.isAdjacentTo(o));
   }
   isOccupied(x, y) {
     return this.rooms.some((r) => r.x === x && r.y === y);
   }
 
-  /** Free grid cells next to existing rooms (where "+ Add module" boxes go). */
-  emptySlots() {
-    if (this.isEmpty) return [{ x: 0, y: 0 }];
-    const seen = new Set();
-    const out = [];
-    for (const r of this.rooms) {
-      for (const [dx, dy] of DIRS) {
-        const x = r.x + dx;
-        const y = r.y + dy;
-        const k = `${x},${y}`;
-        if (!this.isOccupied(x, y) && !seen.has(k)) {
-          seen.add(k);
-          out.push({ x, y });
-        }
-      }
-    }
-    return out;
-  }
-
-  /** Pairs of rooms joined by a tunnel (right or down neighbours). */
+  /** Pairs of modules joined by a tunnel (right or down neighbours); bays have no tunnels. */
   connections() {
     const out = [];
-    for (const a of this.rooms) {
-      for (const b of this.rooms) {
+    const mods = this.modules;
+    for (const a of mods) {
+      for (const b of mods) {
         if (a.x + 1 === b.x && a.y === b.y) out.push({ a, b, dir: 'h' });
         if (a.y + 1 === b.y && a.x === b.x) out.push({ a, b, dir: 'v' });
       }
@@ -76,18 +60,18 @@ export class ShipLayout {
   }
 
   // ---- immutable updates -------------------------------------------------
-  addRoom(room) {
-    return new ShipLayout([...this.rooms, room]);
-  }
-  removeRoom(id) {
-    return new ShipLayout(this.rooms.filter((r) => r.id !== id));
-  }
   updateRoom(id, fn) {
     return new ShipLayout(this.rooms.map((r) => (r.id === id ? fn(r) : r)));
   }
-  moveRoom(id, x, y) {
-    if (this.isOccupied(x, y)) return this;
-    return this.updateRoom(id, (r) => r.moveTo(x, y));
+  /** Swap two cells' positions (a module with another module or with an empty bay). */
+  swapRooms(idA, idB) {
+    const a = this.find(idA);
+    const b = this.find(idB);
+    if (!a || !b || a.id === b.id) return this;
+    return new ShipLayout(this.rooms.map((r) => (r.id === a.id ? r.moveTo(b.x, b.y) : r.id === b.id ? r.moveTo(a.x, a.y) : r)));
+  }
+  clearRoom(id) {
+    return this.updateRoom(id, (r) => r.clear());
   }
   moveItem(itemId, fromId, toId) {
     const from = this.find(fromId);

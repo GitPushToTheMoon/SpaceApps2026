@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ActionResolver, MaterialLibrary, Mission, Room, ScoreBoard, ShipLayout, CHAT_TABS } from '../domain';
+import { ActionResolver, MaterialLibrary, Mission, ScoreBoard, ShipLayout, CHAT_TABS } from '../domain';
 import { AgentService } from '../services/AgentService';
 import { agentService, dataService } from '../services';
 
@@ -138,20 +138,17 @@ export function usePlanner({ initialLayout = 'iss', cardDetail = 'Full', riskCol
       setLayoutKey(key);
       patchUi({ sel: null });
     },
-    addRoom(x, y) {
-      const room = new Room({ name: 'New module', type: 'OTH', x, y });
-      setLayout((l) => l.addRoom(room));
-      patchUi({ sel: room.id });
-    },
-    moveRoom(id, x, y) {
-      setLayout((l) => l.moveRoom(id, x, y));
+    /** Drop a dragged module on another cell: the two swap places (the hull never grows). */
+    swapRooms(id, targetId) {
+      setLayout((l) => l.swapRooms(id, targetId));
       patchUi({ dragId: null });
     },
     startDrag: (id) => patchUi({ dragId: id }),
     endDrag: () => patchUi({ dragId: null }),
     updateRoom: (id, fn) => setLayout((l) => l.updateRoom(id, fn)),
-    deleteRoom(id) {
-      setLayout((l) => l.removeRoom(id));
+    /** Turn a module back into an empty bay (its items are removed). */
+    clearRoom(id) {
+      setLayout((l) => l.clearRoom(id));
       patchUi({ sel: null });
     },
     removeItem: (roomId, itemId) => setLayout((l) => l.updateRoom(roomId, (r) => r.removeItem(itemId))),

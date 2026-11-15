@@ -16,7 +16,12 @@ export const ROOM_TYPES = {
   NODE: { name: 'Node (passage)', cap: 30, air: 10, passage: true },
   HALL: { name: 'Hall / tunnel (passage)', cap: 20, air: 10, passage: true },
   OTH: { name: 'Other', cap: 50, air: 8 },
+  // An unused cell inside a fixed hull. Not a space: not stocked, not scored, not sent to the backend.
+  BAY: { name: 'Empty bay', cap: 0, air: 0, bay: true },
 };
+
+/** Module types a bay can be turned into (everything except BAY). */
+export const MODULE_TYPES = Object.entries(ROOM_TYPES).filter(([, t]) => !t.bay);
 
 export function typeColor(code) {
   const t = ROOM_TYPES[code];
@@ -79,10 +84,17 @@ export const FACTOR_NAMES = [
   'Material thickness',
 ];
 
+// Ships have a fixed hull: presets can't grow, and a custom hull is a fixed grid of bays.
 export const LAYOUT_OPTIONS = [
   ['iss', 'ISS-style station'],
   ['transit', 'Transit spacecraft'],
-  ['blank', 'Blank hull'],
+  ['custom-medium', 'Custom hull'],
+];
+
+export const HULL_SIZES = [
+  ['custom-small', 'Small · 3 × 2 bays'],
+  ['custom-medium', 'Medium · 4 × 3 bays'],
+  ['custom-large', 'Large · 6 × 3 bays'],
 ];
 
 export const CHAT_TABS = {
