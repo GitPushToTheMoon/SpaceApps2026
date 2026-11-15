@@ -1,5 +1,7 @@
 import { Fragment } from 'react';
 import ModuleCard from './ModuleCard';
+import { MapGeometry } from './MapGeometry';
+import { openInstruction } from '../crew/crewText';
 
 function Hull({ hull }) {
   return (
@@ -95,6 +97,31 @@ export default function ShipCanvas({ geo, planner }) {
           />
         )
       )}
+
+      {/* Crew view: highlight the open instruction's source and destination */}
+      {crewMarks(layout, geo, locked ? openInstruction(planner.crewMsgs) : null)}
     </div>
   );
+}
+
+function crewMarks(layout, geo, msg) {
+  if (!msg) return null;
+  const { W, H } = MapGeometry;
+  return [
+    [msg.fromId, 'Take out'],
+    [msg.toId, 'Stow here'],
+  ].map(([id, label]) => {
+    const room = layout.find(id);
+    if (!room) return null;
+    const left = geo.x(room.x);
+    const top = geo.y(room.y);
+    return (
+      <Fragment key={`crew-${id}`}>
+        <div className="crew-ring" style={{ left, top, width: W, height: H }} />
+        <div className="crew-tag" style={{ left: left + W / 2, top: top - 22 }}>
+          {label}
+        </div>
+      </Fragment>
+    );
+  });
 }

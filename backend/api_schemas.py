@@ -162,6 +162,11 @@ class Move(BaseModel):
     to_name: str
     reason: str
     points: float = Field(..., description="How much the ship's overall score drops")
+    from_before: Optional[float] = Field(None, description="Source room's overall score before the move")
+    from_after: Optional[float] = Field(None, description="Source room's overall score after the move")
+    to_after: Optional[float] = Field(None, description="Target room's overall score after the move")
+    ship_before: Optional[float] = Field(None, description="Ship overall score before the move")
+    ship_after: Optional[float] = Field(None, description="Ship overall score after the move")
 
 
 class AssessResponse(BaseModel):

@@ -4,6 +4,7 @@ import { AgentService } from '../services/AgentService';
 import { agentService, dataService } from '../services';
 
 const ASSESS_DEBOUNCE_MS = 1800;
+const hhmm = () => new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 const emptyForm = (lib = 'cotton') => ({ lib, qty: 1, l: '', w: '', h: '' });
 
 /**
@@ -35,6 +36,10 @@ export function usePlanner({ initialLayout = 'iss', cardDetail = 'Full', riskCol
   const [newMat, setNewMat] = useState(null);
   const [agent, setAgent] = useState({ status: 'idle' });
   const [chat, setChat] = useState({ threads: {}, draft: '', busy: null });
+  // Plan sign-off (demo: recorded in the tool, no real reviewer identity) and crew instructions
+  const [approved, setApproved] = useState(null); // null | 'HH:MM'
+  const [crewDraft, setCrewDraft] = useState(null); // instruction drafted from the last applied move
+  const [crewMsgs, setCrewMsgs] = useState([]); // [{ id, text, item, dims, from, to, fromId, toId, fromBefore, fromAfter, shipBefore, shipAfter, at, status, doneAt }]
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
 
@@ -142,6 +147,10 @@ export function usePlanner({ initialLayout = 'iss', cardDetail = 'Full', riskCol
       setLayout(ShipLayout.fromJSON(rooms));
       setLayoutKey(key);
       patchUi({ sel: null });
+      // a different ship is a different plan: clear its sign-off and crew instructions
+      setApproved(null);
+      setCrewDraft(null);
+      setCrewMsgs([]);
     },
     /** Drop a dragged module on another cell: the two swap places (the hull never grows). */
     swapRooms(id, targetId) {
@@ -179,11 +188,47 @@ export function usePlanner({ initialLayout = 'iss', cardDetail = 'Full', riskCol
       setForm((f) => ({ ...f, lib: material.key }));
     },
 
+    // Plan sign-off + crew instructions
+    recordSignoff: () => setApproved(hhmm()),
+    /** Apply a suggested move and draft the crew instruction from it (real before/after scores). */
+    applyMove(mv) {
+      const m = mv.raw || {};
+      const src = layout.find(m.from_id);
+      const item = src?.findItem(m.item_id);
+      const dims = item ? `${item.l} × ${item.w} × ${item.h}` : '';
+      const pieces = `${m.qty} piece${m.qty === 1 ? '' : 's'}`;
+      const name = /^[A-Z0-9-]+$/.test(m.item) ? m.item : String(m.item).toLowerCase();
+      setCrewDraft({
+        text:
+          `Please take the ${name} (${pieces}${dims ? `, ${dims} cm` : ''}) out of ${m.from_name} and stow it in ${m.to_name}.` +
+          (approved ? ' That location is within the approved stowage plan.' : '') +
+          " Mark it done when it's stowed.",
+        item: `${m.item} ×${m.qty}`,
+        dims,
+        from: m.from_name,
+        to: m.to_name,
+        fromId: m.from_id,
+        toId: m.to_id,
+        fromBefore: m.from_before,
+        fromAfter: m.from_after,
+        shipBefore: m.ship_before,
+        shipAfter: m.ship_after,
+      });
+      setLayout((l) => ActionResolver.apply(mv.action, l));
+    },
+    discardCrewDraft: () => setCrewDraft(null),
+    sendToCrew() {
+      if (!crewDraft) return;
+      setCrewMsgs((ms) => [...ms, { ...crewDraft, id: `c${Date.now()}`, at: hhmm(), status: 'sent' }]);
+      setCrewDraft(null);
+    },
+    markStowed: (id) => setCrewMsgs((ms) => ms.map((m) => (m.id === id ? { ...m, status: 'done', doneAt: hhmm() } : m))),
+
     // Agent
     reassess: () => assess(),
     setChatDraft: (draft) => setChat((c) => ({ ...c, draft })),
     sendChat,
   };
 
-  return { loading, loadError, library, layout, layoutKey, mission, ui, form, newMat, agent, chat, board, reqKey, selectedRoom, locked, actions };
+  return { loading, loadError, library, layout, layoutKey, mission, ui, form, newMat, agent, chat, board, reqKey, selectedRoom, locked, approved, crewDraft, crewMsgs, actions };
 }

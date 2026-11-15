@@ -15,6 +15,12 @@ export default function AppHeader({ planner }) {
         </div>
         <div className="spacer" />
         <div className="row gap-10">
+          {planner.locked && (
+            <span className="persona-pill nowrap">
+              <span className="persona-pill__dot" />
+              Astronaut Bailey · crew view
+            </span>
+          )}
           <span className="text-sm muted">Mode</span>
           <Segmented
             options={[

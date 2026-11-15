@@ -204,10 +204,12 @@ def find_moves(req: dict, base: Optional[dict] = None) -> List[dict]:
                 if (after["rooms"][dst["id"]]["overall"] or 0) > MAX_TARGET_SCORE:
                     continue  # the move would make the target High or worse
                 drop = round(base["overall"]["score"] - after["overall"]["score"], 1)
-                if drop > 0 and (best is None or drop > best[0]):
-                    best = (drop, dst)
+                to_after = after["rooms"][dst["id"]]["overall"] or 0
+                # equal drops: prefer the target that ends with the lower score
+                if drop > 0 and (best is None or drop > best[0] or (drop == best[0] and to_after < best[2])):
+                    best = (drop, dst, to_after, after)
             if best:
-                drop, dst = best
+                drop, dst, to_after, after = best
                 why = "no ignition or oxygen source there"
                 if src.get("passage"):
                     why = "clears cargo from a passage; " + why
@@ -217,6 +219,12 @@ def find_moves(req: dict, base: Optional[dict] = None) -> List[dict]:
                 moves.append({"item_id": item["id"], "item": item["name"], "qty": item.get("qty", 1),
                               "from_id": src["id"], "from_name": src["name"],
                               "to_id": dst["id"], "to_name": dst["name"],
-                              "reason": why[0].upper() + why[1:], "points": drop})
+                              "reason": why[0].upper() + why[1:], "points": drop,
+                              # before/after scores, used for the crew instruction
+                              "from_before": base["rooms"][src["id"]]["overall"],
+                              "from_after": after["rooms"][src["id"]]["overall"],
+                              "to_after": to_after,
+                              "ship_before": base["overall"]["score"],
+                              "ship_after": after["overall"]["score"]})
     moves.sort(key=lambda m: -m["points"])
     return moves[:MAX_MOVES]

@@ -143,7 +143,7 @@ select.input { padding: 0 8px; }
 .mission-bar__items { flex: 1 1 600px; display: flex; flex-wrap: wrap; gap: 8px 24px; align-items: center; }
 .mission-bar__item { display: flex; flex-direction: column; gap: 2px; padding-left: 12px; border-left: 1px solid var(--line); }
 .mission-bar__value { font-size: 12.5px; }
-.status { display: flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 500; }
+.status { white-space: nowrap; display: flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 500; }
 
 .mission-editor { border-top: 1px solid var(--line); max-height: calc(100vh - 150px); overflow: auto; }
 .mission-editor__inner { padding: 16px 28px 20px; }
@@ -204,7 +204,7 @@ select.input { padding: 0 8px; }
 .overview__toggle .text-md { font-size: 12.5px; }
 .overview__score { font-size: 14px; font-weight: 600; }
 .overview__chevron { font-size: 11px; color: var(--muted); width: 12px; text-align: center; }
-.overview__body { border-top: 1px solid var(--line-soft); padding: 14px; display: flex; flex-direction: column; gap: 14px; max-height: 520px; overflow: auto; }
+.overview__body { border-top: 1px solid var(--line-soft); padding: 14px; display: grid; align-content: start; gap: 14px; max-height: 520px; overflow: auto; }
 .overview__hero { display: flex; align-items: flex-end; gap: 12px; }
 .overview__big { font-size: 52px; font-weight: 500; line-height: 0.9; letter-spacing: -0.03em; }
 .overview__level { font-size: 14px; font-weight: 600; }
@@ -286,12 +286,12 @@ select.input { padding: 0 8px; }
 .space-table .pl-20 { padding-left: 20px; }
 .space-table .pr-20 { padding-right: 20px; }
 
-.chat { max-height: 440px; overflow: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.chat { max-height: 440px; overflow: auto; padding: 16px; display: grid; align-content: start; gap: 10px; }
 .chat__msg { display: flex; flex-direction: column; gap: 6px; }
 .chat__msg.is-user { align-items: flex-end; }
 .chat__msg.is-agent { align-items: flex-start; }
 .chat__bubble { max-width: 78%; padding: 9px 12px; font-size: 13px; line-height: 1.45; white-space: pre-wrap; }
-.is-user .chat__bubble { background: var(--brand-900); color: #fff; border-radius: 10px 10px 2px 10px; }
+.is-user .chat__bubble { background: var(--brand-900); color: #fff; border-radius: 10px 10px 2px 10px; padding-right: 16px; }
 .is-agent .chat__bubble { background: #f3f3f0; color: var(--ink); border-radius: 10px 10px 10px 2px; }
 .chat__acts { display: flex; flex-wrap: wrap; gap: 6px; max-width: 78%; }
 .chat__acts .btn, .nowrap { white-space: nowrap; }
@@ -321,6 +321,34 @@ select.input { padding: 0 8px; }
   .mission-bar__value { font-size: 11.5px; }
   .mission-editor__inner { padding: 12px 16px 16px; }
   .mission-editor__cards .mission-card { flex-basis: 100% !important; }
+}
+
+/* ---------- Plan sign-off and crew instructions ---------- */
+.btn--outline-brand { background: #fff; border: 1px solid var(--brand-900); color: var(--brand-900); font-weight: 500; }
+.btn--outline-brand:hover { background: var(--brand-50); }
+.signoff-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; background: var(--brand-50); color: var(--brand-900); font-size: 12px; font-weight: 500; }
+.crew-outbox { padding: 12px; border: 1px solid var(--brand-300); border-radius: 8px; background: #fbfdff; }
+.crew-draft .text-md { line-height: 1.45; }
+.crew-ring { position: absolute; border-radius: 6px; box-shadow: 0 0 0 3px var(--brand-900); pointer-events: none; z-index: 4; }
+.crew-tag { position: absolute; transform: translate(-50%, -50%); z-index: 5; pointer-events: none; padding: 2px 8px; border-radius: 4px; background: var(--brand-900); color: #fff; font-size: 11px; font-weight: 600; white-space: nowrap; }
+.crew-wrap { padding: 20px 28px 0; }
+.crew-empty { padding: 14px 16px; border: 1.5px dashed var(--line); border-radius: 8px; color: var(--muted); font-size: 13px; background: #fff; }
+.crew-card { display: flex; flex-wrap: wrap; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: #fff; }
+.crew-card__main { flex: 1 1 420px; padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; }
+.crew-card__side { flex: 1 1 240px; min-width: 240px; padding: 16px 18px; background: var(--brand-50); display: flex; flex-direction: column; gap: 10px; justify-content: center; }
+.crew-card__text { font-size: 15px; line-height: 1.45; }
+.crew-card__done { width: 100%; min-height: 44px; font-size: 14px; }
+.crew-chip { padding: 3px 8px; border-radius: 4px; background: var(--brand-900); color: #fff; font-size: 10.5px; letter-spacing: 0.08em; }
+.crew-pill { padding: 3px 9px; border-radius: 999px; border: 1px solid var(--line); font-size: 12.5px; }
+.crew-pill--to { border: 1.5px solid var(--brand-900); color: var(--brand-900); font-weight: 500; }
+.persona-pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; background: var(--brand-50); color: var(--brand-900); font-size: 12.5px; font-weight: 500; }
+.persona-pill__dot { width: 7px; height: 7px; border-radius: 50%; background: var(--brand-900); }
+.space-table__name { white-space: nowrap; }
+@media (min-width: 721px) {
+  .mission-card .card-title, .confirm__title, .confirm .text-help { white-space: nowrap; }
+}
+@media (max-width: 720px) {
+  .crew-wrap { padding: 12px 16px 0; }
 }
 
 /* ---------- Handoff report (screen: overlay; print: the only thing printed) ---------- */

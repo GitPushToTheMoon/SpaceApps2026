@@ -51,7 +51,8 @@ export default function ReportView({ planner }) {
           <div className="flex-1">
             <h1>Stowage fire-risk handoff report</h1>
             <div className="report__meta">
-              {LAYOUT_NAMES[layoutKey] || 'Custom hull'} · Assessed {date}
+              {LAYOUT_NAMES[layoutKey] || 'Custom hull'} · Assessed {date} · Plan{' '}
+              {planner.approved ? `approved (M&P and S&MA sign-off recorded ${planner.approved}, demo)` : 'draft, not yet reviewed'}
               <br />
               Prepared by{' '}
               <input className="report__by" placeholder="your name" value={ui.reportBy || ''} onChange={(e) => actions.setReportBy(e.target.value)} />

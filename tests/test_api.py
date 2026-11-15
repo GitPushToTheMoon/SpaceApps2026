@@ -328,6 +328,18 @@ def test_li_ion_pack_as_ignition_source_is_fine(monkeypatch):
     assert assess(load("iss_moon"))["text_source"] == "ai"
 
 
+def test_moves_carry_before_and_after_scores():
+    # used for the crew instruction: points must equal the ship's before - after
+    body = load("iss_moon")
+    body["spaces"].append({"id": "sto2", "name": "New stowage", "type": "Stowage", "passage": False,
+                           "airflow_cm_s": 3, "capacity_kg": 140, "neighbours": [], "items": []})
+    j = assess(body)
+    assert j["moves"]
+    for m in j["moves"]:
+        assert round(m["ship_before"] - m["ship_after"], 1) == m["points"]
+        assert m["from_after"] < m["from_before"] and m["to_after"] <= 60
+
+
 def test_moves_never_target_high_rooms():
     for name in ("iss_moon", "transit_mars"):
         body = load(name)
