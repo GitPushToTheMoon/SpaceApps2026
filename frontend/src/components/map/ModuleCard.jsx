@@ -1,4 +1,4 @@
-import { level3 } from '../../domain/levels';
+import { level5 } from '../../domain/levels';
 import { Dot, TypeBadge } from '../common';
 
 /** DET / EXT chip: solid when present, red dashed when needed but missing, grey dashed otherwise. */
@@ -10,7 +10,7 @@ function SafetyChip({ label, has, needed }) {
 export default function ModuleCard({ room, board, left, top, selected, locked, colouring, detail, isDragging, onSelect, onDragStart, onDragEnd }) {
   const s = board.stats(room);
   const score = board.scores(room).overall;
-  const L = level3(score);
+  const L = level5(score);
   const tags = [];
   if (s.heat >= 25 || s.ign >= 2) tags.push('Hot electronics');
   if (s.oxy) tags.push('O₂ outlet');

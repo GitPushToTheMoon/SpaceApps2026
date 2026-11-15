@@ -9,6 +9,7 @@ template text ("text_source": "template"); /api/chat answers 503.
 import hashlib
 import json
 import os
+import re
 import time
 from collections import OrderedDict
 from datetime import datetime, timezone
@@ -68,6 +69,165 @@ def _log(entry: dict) -> None:
         print(f"[api] could not write assessment log: {e}")
 
 
+# ------------------------------------------------------------------ facts for the AI
+
+_DID_NOT_BURN = {"self-extinguished", "no ignition", "no spread", "blowoff"}
+
+
+def nasa_data_summary() -> List[dict]:
+    """What our dataset actually contains, per material (verified rows only), so the AI can
+    quote real test counts, investigations and oxygen ranges instead of guessing."""
+    df = data.load_experiments()
+    profiles = scoring.material_profiles()
+    out = []
+    for mat, rows in df.groupby(df["material"].fillna("")):
+        if not mat:
+            continue
+        o2 = rows[["oxygen_pct_min", "oxygen_pct_max"]]
+        prof = profiles.get(mat.lower(), {})
+        out.append({
+            "material": mat,
+            "tests": int(len(rows)),
+            "by_investigation": {k: int(v) for k, v in rows.groupby("investigation").size().items()},
+            "oxygen_tested_pct": [float(o2.min().min()), float(o2.max().max())],
+            "burned": int(rows["outcome_category"].isin(["burned", "ignited"]).sum()),
+            "did_not_burn": int(rows["outcome_category"].isin(_DID_NOT_BURN).sum()),
+            "threshold_pct": round(prof["threshold_pct"], 1) if prof.get("threshold_pct") is not None else None,
+            "threshold_basis": prof.get("basis"),
+        })
+    tested = {m["material"].lower() for m in out}
+    for lib in data.load_library():  # PSI materials we list but have no verified tests for
+        mk = lib.get("material_key")
+        if mk and mk.lower() not in tested:
+            out.append({"material": mk, "tests": 0, "note": "listed in the PSI materials, no verified tests yet"})
+    return out
+
+
+TESTS_PER_OUTCOME = 3          # per material: closest burned / did-not-burn tests to each phase's oxygen
+_ID_RE = re.compile(r"\bPSI-\d+-[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*\b")
+_URL_RE = re.compile(r"https?://[^\s)\]]+")
+
+
+def _clip(text, n: int):
+    text = "" if text is None or (isinstance(text, float) and text != text) else str(text)
+    return text if len(text) <= n else text[: n - 1].rstrip() + "…"
+
+
+def cited_tests(oxygen_levels: List[float]) -> List[dict]:
+    """Individual verified experiments the chatbot may cite, per material:
+    the tests that set the burn threshold (lowest burn, highest went-out) plus the closest
+    burned and did-not-burn tests to each phase's oxygen. Every field comes from the CSV."""
+    df = data.load_experiments().copy()
+    df["_o2"] = df[["oxygen_pct_min", "oxygen_pct_max"]].mean(axis=1)
+    burned = df["outcome_category"].isin(["burned", "ignited"])
+    went_out = df["outcome_category"].isin(_DID_NOT_BURN)
+    picked = []
+    for mat, rows in df[df["material"].notna()].groupby("material"):
+        ids = []
+        rows = rows[rows["_o2"].notna()]  # tests without a reported oxygen level can't be compared
+        b, w = rows[burned.loc[rows.index]], rows[went_out.loc[rows.index]]
+        if not b.empty:
+            ids.append(b[["oxygen_pct_min", "oxygen_pct_max"]].min(axis=1).idxmin())  # lowest O2 it burned at
+        if not w.empty:
+            ids.append(w[["oxygen_pct_min", "oxygen_pct_max"]].max(axis=1).idxmax())  # highest O2 it went out at
+        for o2 in oxygen_levels:
+            for part in (b, w):
+                if not part.empty:
+                    ids += list((part["_o2"] - o2).abs().nsmallest(TESTS_PER_OUTCOME).index)
+        for i in dict.fromkeys(ids):
+            r = df.loc[i]
+            num = lambda c: None if r[c] != r[c] else float(r[c])  # NaN -> None
+            picked.append({
+                "id": r["id"], "material": mat, "investigation": r["investigation"],
+                "oxygen_pct": [num("oxygen_pct_min"), num("oxygen_pct_max")],
+                "pressure_psi": [num("pressure_psi_min"), num("pressure_psi_max")],
+                "airflow_cm_s": [num("airflow_cm_s_min"), num("airflow_cm_s_max")],
+                "gravity": r["gravity"], "outcome_category": r["outcome_category"],
+                "outcome": _clip(r["outcome"], 160), "source_url": r["source_url"],
+                "source_quote": _clip(r["source_quote"], 200),
+            })
+    return picked
+
+
+def citations_ok(text: str, tests: List[dict]) -> bool:
+    """Every experiment id and URL in the text must be one we gave the AI."""
+    ids = {t["id"] for t in tests}
+    urls = {t["source_url"] for t in tests}
+    if any(i not in ids for i in _ID_RE.findall(text or "")):
+        return False
+    return all(u.rstrip(".,;:") in urls for u in _URL_RE.findall(text or ""))
+
+
+def citations_in(text: str, tests: List[dict]) -> List[dict]:
+    by_id = {t["id"]: t for t in tests}
+    out = []
+    for i in dict.fromkeys(_ID_RE.findall(text or "")):
+        if i in by_id:
+            t = by_id[i]
+            out.append({"id": i, "material": t["material"], "investigation": t["investigation"],
+                        "source_url": t["source_url"]})
+    return out
+
+
+def _sources(space: dict) -> dict:
+    """Ignition/oxygen sources in a space, by name (and whether a Li-ion pack is unbagged)."""
+    ign = [i["name"] for i in space.get("items") or [] if i.get("ignition_source")]
+    oxy = [i["name"] for i in space.get("items") or [] if i.get("oxygen_source")]
+    liion = any((data.get_library_item(i.get("key")) or {}).get("li_ion") and not
+                (data.get_library_item(i.get("key")) or {}).get("bagged") for i in space.get("items") or [])
+    return {"ignition_sources": ign, "oxygen_sources": oxy, "unbagged_li_ion": liion}
+
+
+def _room_facts(space: dict, scored: dict, names: List[str]) -> dict:
+    r = scored["rooms"][space["id"]]
+    last = r[names[-1]]
+    return {
+        "id": space["id"], "name": space["name"], "airflow_cm_s": space["airflow_cm_s"],
+        **{p: {"score": r[p]["score"], "level": r[p]["level"], "factors": r[p]["factors"]} for p in names},
+        "overall": r["overall"],
+        "materials": [{"name": i["name"], "nasa_material": i["material_key"],
+                       "nasa_tests": i["n_tests"], "evidence": i["evidence"],
+                       "burn_threshold_oxygen_pct": i["threshold_pct"], "basis": i["basis"],
+                       "hazard": {p: r[p]["items"][k]["hazard"] for p in names},
+                       "gap": i["gap"]} for k, i in enumerate(last["items"])],
+        **_sources(space),
+    }
+
+
+def _allowed(*objs) -> Dict[str, List[float]]:
+    """Numbers the AI may use: anything in the facts; test counts and percentages in context."""
+    nums = []
+    for o in objs:
+        nums += risk.collect_numbers(o)
+    tests, pcts = set(), set()
+    pct_keys = {"o2_percent", "oxygen_pct", "threshold_pct", "burn_threshold_oxygen_pct", "oxygen_tested_pct"}
+    text_keys = {"basis", "threshold_basis", "gap", "plain", "data_gaps", "not_scored"}
+
+    def walk(o):
+        if isinstance(o, dict):
+            for k, v in o.items():
+                if k in ("tests", "nasa_tests", "n_tests") and isinstance(v, (int, float)) and not isinstance(v, bool):
+                    tests.add(float(v))
+                elif k == "by_investigation" and isinstance(v, dict):
+                    tests.update(float(x) for x in v.values())
+                elif k in pct_keys or k in text_keys:
+                    pcts.update(risk.collect_numbers(v))
+                elif k == "weight" and isinstance(v, (int, float)):
+                    pcts.add(round(float(v) * 100, 1))
+                walk(v)
+        elif isinstance(o, list):
+            for v in o:
+                walk(v)
+    for o in objs:
+        walk(o)
+    return {"all": nums, "tests": sorted(tests), "percents": sorted(pcts)}
+
+
+def _text_ok(t, allowed: Dict[str, List[float]]) -> bool:
+    return (isinstance(t, str) and t.strip() != "" and risk.all_numbers_ok(t, allowed["all"])[0]
+            and risk.context_numbers_ok(t, allowed["tests"], allowed["percents"])[0])
+
+
 # ------------------------------------------------------------------ text
 
 def _template(scored: dict, req: dict, fixes: Dict[str, List[dict]]) -> dict:
@@ -90,14 +250,16 @@ def _template(scored: dict, req: dict, fixes: Dict[str, List[dict]]) -> dict:
         rooms[s["id"]] = "Main drivers: " + " and ".join(FACTOR_WORDS[k] for k, _ in top) + "."
         if any(i["evidence"] == "none" for i in room["items"]):
             rooms[s["id"]] += " Some items have no NASA test data."
+        if _sources(s)["unbagged_li_ion"]:
+            rooms[s["id"]] += " Unbagged Li-ion battery present (battery hazard is not scored)."
     return {"summary": summary, "rooms": rooms,
             "fixes": {sid: [f["why"] for f in fl] for sid, fl in fixes.items()}}
 
 
-def _checked_text(raw: dict, template: dict, allowed: List[float]) -> Optional[dict]:
+def _checked_text(raw: dict, template: dict, allowed: Dict[str, List[float]]) -> Optional[dict]:
     """AI text with every number checked. None = reject (wrong number or missing summary)."""
     def ok(t):
-        return isinstance(t, str) and t.strip() and risk.all_numbers_ok(t, allowed)[0]
+        return _text_ok(t, allowed)
 
     if not isinstance(raw, dict) or not ok(raw.get("summary")):
         return None
@@ -129,18 +291,13 @@ def build_assessment(req: dict, use_ai: bool = True) -> dict:
     facts = {
         "conditions": req["conditions"],
         "overall": scored["overall"], "phases": scored["phases"],
-        "rooms": [{"id": s["id"], "name": s["name"],
-                   **{p: {"score": scored["rooms"][s["id"]][p]["score"],
-                          "factors": scored["rooms"][s["id"]][p]["factors"]} for p in names},
-                   "items": [{"name": i["name"], "evidence": i["evidence"], "basis": i["basis"]}
-                             for i in scored["rooms"][s["id"]][names[-1]]["items"]],
-                   "fixes": [f["title"] for f in fixes[s["id"]]]}
-                  for s in req["spaces"] if s["id"] in fixes],
+        "rooms": [{**_room_facts(sp, scored, names), "fixes": [f["title"] for f in fixes[sp["id"]]]}
+                  for sp in req["spaces"] if sp["id"] in fixes],
         "moves": [{"item": m["item"], "from": m["from_name"], "to": m["to_name"]} for m in moves],
+        "not_scored": NOT_SCORED,
     }
     template = _template(scored, req, fixes)
-    allowed = risk.collect_numbers(facts) + risk.collect_numbers(req) \
-        + risk.collect_numbers([f for fl in fixes.values() for f in fl]) + risk.collect_numbers(moves)
+    allowed = _allowed(facts, req, [f for fl in fixes.values() for f in fl], moves)
     text, source = None, "ai"
     try:
         for _ in range(2 if use_ai else 0):
@@ -167,7 +324,8 @@ def build_assessment(req: dict, use_ai: bool = True) -> dict:
         mats = [i for i in s["items"] if i.get("category", "material") == "material"
                 and not i.get("ignition_source")]
         items = [{"id": m["id"], "name": it["name"], "material_key": it["material_key"],
-                  "hazard": hazards[k], "evidence": it["evidence"], "basis": it["basis"]}
+                  "hazard": hazards[k], "evidence": it["evidence"], "basis": it["basis"],
+                  "n_tests": it["n_tests"], "threshold_pct": it["threshold_pct"], "gap": it["gap"]}
                  for k, (m, it) in enumerate(zip(mats, r[names[-1]]["items"]))]
         rooms.append({
             "id": s["id"], "name": s["name"], "stocked": stocked,
@@ -245,27 +403,33 @@ def api_chat(req: ChatRequest):
     # scores for the chat: the cached assessment if there is one, otherwise code only (no extra AI call)
     result = _cache.get(input_hash(ship)) or build_assessment(ship, use_ai=False)
     history = [m.model_dump() for m in req.messages][-HISTORY_TURNS:]
+    scored = adapter.score(ship)
+    names = scored["phase_names"]
     compact = {k: result[k] for k in ("overall", "phases", "factors", "moves", "data_gaps")}
-    compact["rooms"] = [{k: r[k] for k in ("id", "name", "cruise", "surf", "overall", "level", "rationale")}
-                        | {"fixes": [{"title": f["title"], "points": f["points"]} for f in r["fixes"]]}
-                        for r in result["rooms"]]
-    allowed = risk.collect_numbers(ship) + risk.collect_numbers(result)
+    compact["rooms"] = [{**_room_facts(sp, scored, names), "level": r["level"], "rationale": r["rationale"],
+                         "fixes": [{"title": f["title"], "points": f["points"]} for f in r["fixes"]]}
+                        for sp, r in zip(ship["spaces"], result["rooms"])]
+    compact["nasa_dataset"] = nasa_data_summary()
+    oxygen_levels = [ship["conditions"]["cruise"]["o2_percent"]] + (
+        [ship["conditions"]["surface"]["o2_percent"]] if ship["conditions"].get("surface") else [])
+    compact["nasa_tests"] = tests = cited_tests(oxygen_levels)
+    allowed = _allowed(ship, result, compact)
 
     for attempt in range(2):
         try:
             raw = ai.planner_chat(req.tab, history, ship, compact, _gravity(ship))
-        except ai.AIUnavailable as e:
-            print(f"[api/chat] AI unavailable: {e}")
+        except Exception as e:  # AIUnavailable, bad key, quota... the frontend shows "could not be reached"
+            print(f"[api/chat] AI unavailable: {e!r}")
             raise HTTPException(503, "The agent could not be reached. Try again in a moment.")
         reply = str((raw or {}).get("reply") or "").strip()
-        if reply and risk.all_numbers_ok(reply, allowed)[0]:
+        if reply and _text_ok(reply, allowed) and citations_ok(reply, tests):
             break
         print("[api/chat] rejected reply (wrong numbers or empty), retrying")
     else:
         return ChatResponse(reply="I couldn't give an answer I could check against the scores. "
-                                  "Try asking another way.", actions=[], text_source="fallback")
+                                  "Try asking another way.", actions=[], citations=[], text_source="fallback")
 
-    base = adapter.score(ship)
+    base = scored
     out, seen = [], set()
     for a in (raw.get("actions") or [])[:5]:
         a = actions.validate_action(a, ship)
@@ -273,4 +437,4 @@ def api_chat(req: ChatRequest):
             continue
         seen.add(json.dumps(a, sort_keys=True))
         out.append({**a, "label": actions.label(a, ship), "points": actions.points(ship, a, base)["ship"]})
-    return ChatResponse(reply=reply, actions=out, text_source="ai")
+    return ChatResponse(reply=reply, actions=out, citations=citations_in(reply, tests), text_source="ai")

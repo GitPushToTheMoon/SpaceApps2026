@@ -291,7 +291,9 @@ def score_room(space: dict, oxygen_pct: float, gravity_g: float = 0.0,
         "factors": factors,
         "items": [{"name": m.get("name"), "material_key": m.get("material_key"),
                    "hazard": m["_hazard"]["score"], "evidence": m["_hazard"]["evidence"],
-                   "basis": m["_hazard"]["basis"]} for m in materials],
+                   "basis": m["_hazard"]["basis"], "n_tests": m["_hazard"]["n_tests"],
+                   "threshold_pct": m["_hazard"]["threshold_pct"], "gap": m["_hazard"]["gap"]}
+                  for m in materials],
         "gaps": list(dict.fromkeys(gaps)),
     }
 

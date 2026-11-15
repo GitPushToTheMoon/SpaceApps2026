@@ -26,9 +26,11 @@ export function typeColor(code) {
 }
 
 export const ATMOSPHERES = {
-  earth: { name: 'Sea-level', label: '14.7 psia · 21% O₂', p: 14.7, o2: 21, press: 25 },
-  base: { name: 'Moon base', label: '10.2 psia · 30% O₂', p: 10.2, o2: 30, press: 55 },
-  expl: { name: 'Exploration', label: '8.2 psia · 34% O₂', p: 8.2, o2: 34, press: 70 },
+  // NASA reference atmospheres: sea level; 10.2/26.5 = Shuttle staged-EVA and ISS campout
+  // atmosphere; 8.2/34 = NASA's recommended exploration atmosphere (EAWG).
+  earth: { name: 'Sea-level', label: '14.7 psia · 21% O₂', p: 14.7, o2: 21 },
+  base: { name: 'Moon base', label: '10.2 psia · 26.5% O₂', p: 10.2, o2: 26.5 },
+  expl: { name: 'Exploration', label: '8.2 psia · 34% O₂', p: 8.2, o2: 34 },
 };
 
 export const CRUISE_ATMOSPHERE = ATMOSPHERES.earth;
@@ -68,14 +70,13 @@ export const SAFETY_ITEMS = {
 
 export const PHASES = { pre: 'Cruise', surf: 'Surface' };
 
+// Placeholder labels before the first assessment; the backend sends the real list.
 export const FACTOR_NAMES = [
-  'Materials & fuel load',
-  'Oxygen & ventilation',
-  'Cabin pressure',
+  'Material hazard (NASA test data)',
+  'Fuel load',
+  'Ignition & oxygen sources',
   'Airflow',
   'Material thickness',
-  'Proximity to combustible machinery',
-  'Machinery heat & temperature',
 ];
 
 export const LAYOUT_OPTIONS = [

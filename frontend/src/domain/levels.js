@@ -1,21 +1,14 @@
 import { COLORS as C } from './constants';
 
-// 3-band level used for module card colouring.
-export function level3(score) {
-  if (score == null) return { label: 'Empty', color: C.gray, wash: '#ffffff' };
-  if (score <= 40) return { label: 'Low', color: C.green, wash: 'oklch(0.975 0.025 150)' };
-  if (score <= 60) return { label: 'Elevated', color: C.yellow, wash: 'oklch(0.978 0.045 100)' };
-  return { label: 'High', color: C.red, wash: 'oklch(0.968 0.03 27)' };
-}
-
-// 5-band level used everywhere else.
+// One 5-band scale everywhere (map cards, panels, tables), matching the backend's levels.
+// `wash` is the module card background when risk colouring is on.
 export function level5(score) {
-  if (score == null) return { label: 'Empty', color: C.gray };
-  if (score <= 20) return { label: 'Low', color: C.green };
-  if (score <= 40) return { label: 'Guarded', color: C.lgreen };
-  if (score <= 60) return { label: 'Elevated', color: C.yellow };
-  if (score <= 80) return { label: 'High', color: C.orange };
-  return { label: 'Severe', color: C.red };
+  if (score == null) return { label: 'Empty', color: C.gray, wash: '#ffffff' };
+  if (score <= 20) return { label: 'Low', color: C.green, wash: 'oklch(0.975 0.025 150)' };
+  if (score <= 40) return { label: 'Guarded', color: C.lgreen, wash: 'oklch(0.975 0.035 130)' };
+  if (score <= 60) return { label: 'Elevated', color: C.yellow, wash: 'oklch(0.978 0.045 100)' };
+  if (score <= 80) return { label: 'High', color: C.orange, wash: 'oklch(0.972 0.035 55)' };
+  return { label: 'Severe', color: C.red, wash: 'oklch(0.965 0.035 27)' };
 }
 
 export const SCALE5 = [
@@ -26,8 +19,4 @@ export const SCALE5 = [
   { label: 'Severe', color: C.red, lo: 81, hi: 100 },
 ];
 
-export const MAP_LEGEND = [
-  { label: 'Low', color: C.green },
-  { label: 'Elevated', color: C.yellow },
-  { label: 'High', color: C.red },
-];
+export const MAP_LEGEND = SCALE5.map(({ label, color }) => ({ label, color }));

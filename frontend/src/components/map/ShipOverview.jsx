@@ -14,20 +14,20 @@ export default function ShipOverview({ board, open, onToggle, onSelect }) {
           <Dot color={L.color} />
           {L.label}
         </span>
-        <span className="mono overview__score">{ship.overall}</span>
+        <span className="mono overview__score">{ship.overall ?? '—'}</span>
         <span className="overview__chevron">{open ? '▴' : '▾'}</span>
       </button>
 
       {open && (
         <div className="overview__body">
           <div className="overview__hero">
-            <span className="mono overview__big">{ship.overall}</span>
+            <span className="mono overview__big">{ship.overall ?? '—'}</span>
             <div className="col gap-3">
               <span className="row gap-6 overview__level">
                 <Dot size={10} color={L.color} />
                 {L.label}
               </span>
-              <span className="text-sm muted">{ship.stocked ? `Driven by ${ship.driver === 'surf' ? 'surface' : 'cruise'}` : 'No stocked spaces yet'}</span>
+              <span className="text-sm muted">{!ship.stocked ? 'No stocked spaces yet' : ship.driver ? `Driven by ${ship.driver === 'surf' ? 'surface' : 'cruise'}` : 'Waiting for assessment'}</span>
             </div>
           </div>
 

@@ -210,3 +210,24 @@ def all_numbers_ok(text: str, allowed: List[float]) -> Tuple[bool, List[str]]:
             continue
         bad.append(num)
     return (not bad), bad
+
+
+# Numbers in context: a real value used with the wrong meaning ("14 tests" when 14 is an
+# airflow) passes all_numbers_ok, so test counts and oxygen percentages get their own check.
+_TESTS_NUM = re.compile(r"(?<![\w.\-])(\d+(?:\.\d+)?)\s+(?:[A-Za-z\-]+\s+){0,3}?(?:tests?|experiments?|runs?|trials?)\b",
+                        re.IGNORECASE)
+_PCT_NUM = re.compile(r"(?<![\w.\-])(\d+(?:\.\d+)?)\s*%")
+
+
+def context_numbers_ok(text: str, test_counts: List[float], percents: List[float]) -> Tuple[bool, List[str]]:
+    """'N tests' must be a real test count; 'N%' must be a real oxygen level, threshold or
+    other percentage from the data. Returns (ok, offending strings)."""
+    bad = []
+    for num in _TESTS_NUM.findall(text or ""):
+        if not any(abs(float(num) - t) < 1e-9 for t in test_counts):
+            bad.append(f"{num} tests")
+    for num in _PCT_NUM.findall(text or ""):
+        tol = 0.05 if "." in num else 0.6
+        if not any(abs(float(num) - p) <= tol for p in percents):
+            bad.append(f"{num}%")
+    return (not bad), bad

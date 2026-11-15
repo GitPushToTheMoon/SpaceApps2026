@@ -171,7 +171,7 @@ Request = the prototype's `agentInput()` JSON, **plus each item's library `key`*
 {
   "conditions": {
     "cruise":  { "gravity_g": 0, "pressure_psia": 14.7, "o2_percent": 21, "ventilation": "normal", "cruise_days": 180 },
-    "surface": { "body": "Moon", "gravity_g": 0.166, "pressure_psia": 10.2, "o2_percent": 30,
+    "surface": { "body": "Moon", "gravity_g": 0.166, "pressure_psia": 10.2, "o2_percent": 26.5,
                  "stay_days": 30, "eva_prep_periods_high_o2": 4 }
   },
   "out_of_scope": ["launch"],
@@ -185,14 +185,16 @@ Request = the prototype's `agentInput()` JSON, **plus each item's library `key`*
 }
 ```
 - `surface: null` = cruise only. `ventilation: "reduced"` halves every space's cruise airflow.
+- Surface atmospheres in the UI are NASA reference values: 14.7 psia / 21%, 10.2 psia / 26.5%
+  (Shuttle staged EVA, ISS campout; the default) and 8.2 psia / 34% (NASA exploration atmosphere).
 - Extra fields (`baseline`, `swap_to`, `test_dataset`, `bagged`) are accepted and ignored or used.
 - Space ids must be unique; `cm` needs 3 numbers. Bad input returns **422**.
 
 Response (phases are `cruise` and `surf`, as in the handoff):
 ```json
 {
-  "overall": { "score": 60.2, "level": "High", "driver": "surf", "summary": "two sentences" },
-  "phases":  { "cruise": { "score": 50.1, "level": "Elevated" }, "surf": { "score": 65.4, "level": "High" } },
+  "overall": { "score": 60.0, "level": "Elevated", "driver": "surf", "summary": "two sentences" },
+  "phases":  { "cruise": { "score": 50.1, "level": "Elevated" }, "surf": { "score": 65.2, "level": "High" } },
   "rooms": [{
     "id": "n7", "name": "Quest Airlock", "stocked": true,
     "cruise": 51.3, "surf": 62.5, "overall": 58.7,
@@ -203,12 +205,13 @@ Response (phases are `cruise` and `surf`, as in the handoff):
                 "action": { "type": "swap", "room_id": "n7", "item_id": "n6", "to": "melamine" } }],
     "factors": { "cruise": { "material": 50.0, "fuel": 14.3, "sources": 67.0, "airflow": 20.0, "thickness": 35.0 }, "surf": { } },
     "items": [{ "id": "n6", "name": "Polyurethane foam", "material_key": null,
-                "hazard": { "cruise": 70.0, "surf": 95.0 }, "evidence": "none", "basis": "…" }]
+                "hazard": { "cruise": 70.0, "surf": 95.0 }, "evidence": "none", "basis": "…",
+                "n_tests": 0, "threshold_pct": null, "gap": "no NASA test data; score is an estimate" }]
   }],
   "factors": [{ "key": "material", "name": "Material hazard (NASA test data)", "weight": 0.45,
                 "cruise": { "avg": 0, "min": 0, "max": 0 }, "surf": { "avg": 0, "min": 0, "max": 0 } }],
   "moves": [{ "item_id": "n6", "item": "Polyurethane foam", "qty": 1, "from_id": "n7", "from_name": "Quest Airlock",
-              "to_id": "n2", "to_name": "PMM Stowage & Logistics", "reason": "…", "points": 2.2 }],
+              "to_id": "n2", "to_name": "PMM Stowage & Logistics", "reason": "…", "points": 2.0 }],
   "data_gaps": ["…"],
   "text_source": "ai",
   "input_hash": "a1b2c3d4e5f60718",
@@ -246,11 +249,21 @@ appended to `data/assessments.jsonl` (input + result, for M&P traceability).
 - `tab`: `overall` | `factors` | `moves` | `table`. Keep one thread per tab and send the
   whole thread; agent turns go back as `{ "role": "agent", "text", "actions" }`.
   Only the last 10 messages are used.
-- Response: `{ "reply": "…", "actions": [ { ...action, "label": "Swap X → Y", "points": 1.4 } ], "text_source": "ai" }`.
+- Response: `{ "reply": "…", "actions": [ { ...action, "label": "Swap X → Y", "points": 1.4 } ], "citations": [ … ], "text_source": "ai" }`.
+- **Citations:** Gemini also gets individual verified experiments from `experiments.csv` (per
+  material: the tests that set the burn threshold, plus the closest burned / went-out tests to
+  each phase's oxygen), with id, conditions, outcome and NASA PSI source. It cites them in the
+  reply as `[PSI-99-2-9]`; `citations` lists each cited test:
+  `{ "id": "PSI-99-2-9", "material": "PMMA", "investigation": "PSI-99 Spacecraft Fire Experiment-II", "source_url": "https://psi.nasa.gov/…/PSI-99" }`.
+  A reply citing an id or URL that isn't in that list is rejected.
   Actions are checked against the ship (unknown ids, wrong swap, duplicate add, move into a
   passage are dropped) and `points` is the real drop in the ship's overall score.
-- A reply with a wrong number is retried once, then replaced with a short "couldn't answer"
-  message (`text_source: "fallback"`).
+- Gemini gets the scores plus our dataset: every material's verified test count, investigations,
+  oxygen range tested, burned / did-not-burn counts and burn threshold, and each room's items
+  with their test counts and evidence. It must answer data questions only from that.
+- Every number in a reply must exist in that data, and in context: "N tests" must be a real
+  test count and "N%" a real oxygen level or threshold. A reply that fails is retried once,
+  then replaced with a short "couldn't answer" message (`text_source: "fallback"`).
 - **503** if Gemini is unreachable: show "The agent could not be reached. Try again in a moment."
 
 ### Applying an action (frontend)

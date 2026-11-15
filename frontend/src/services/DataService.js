@@ -1,4 +1,5 @@
 import { MOCK_LAYOUTS, MOCK_MATERIALS } from '../data/mockData';
+import { API_BASE } from './config';
 
 /**
  * Base class: the contract for where planner data comes from.
@@ -32,33 +33,41 @@ export class MockDataService extends DataService {
 }
 
 /**
- * Talks to the FastAPI backend. Endpoints (adjust to match your routes):
- *   GET  /api/materials          -> [material, ...]
- *   GET  /api/layouts/{key}      -> [room, ...]
- *   PUT  /api/layouts/{key}      <- [room, ...]
+ * Item library from the FastAPI backend (GET /library), converted to the
+ * MaterialLibrary shape. Layouts are still the starter layouts in mockData.js
+ * (the backend doesn't store layouts yet). If the backend is down, the mock
+ * library is used so the editor still works.
  */
-export class ApiDataService extends DataService {
-  constructor(baseUrl = '/api') {
+const FLAM = { Low: 1, Moderate: 2, High: 3 };
+
+export class ApiDataService extends MockDataService {
+  constructor(baseUrl = API_BASE) {
     super();
     this.baseUrl = baseUrl;
   }
 
-  async _request(path, options = {}) {
-    const res = await fetch(`${this.baseUrl}${path}`, {
-      headers: { 'Content-Type': 'application/json' },
-      ...options,
-    });
-    if (!res.ok) throw new Error(`${options.method || 'GET'} ${path} failed: ${res.status}`);
-    return res.json();
+  static toLibraryEntry(x) {
+    const m = { key: x.key, name: x.name, cat: x.category };
+    if (x.flammability) m.flam = FLAM[x.flammability];
+    if (x.soft_goods) m.soft = true;
+    if (x.swap) m.swap = x.swap;
+    if (x.ignition_source) m.ign = true;
+    if (x.oxygen_source) m.oxy = true;
+    if (x.heat != null) m.heat = x.heat;
+    if (x.li_ion) m.liion = true;
+    if (x.bagged) m.bagged = true;
+    if (x.test_dataset) m.ds = { ...x.test_dataset };
+    return m;
   }
 
-  getMaterials() {
-    return this._request('/materials');
-  }
-  getLayout(key) {
-    return this._request(`/layouts/${encodeURIComponent(key)}`);
-  }
-  saveLayout(key, rooms) {
-    return this._request(`/layouts/${encodeURIComponent(key)}`, { method: 'PUT', body: JSON.stringify(rooms) });
+  async getMaterials() {
+    try {
+      const res = await fetch(`${this.baseUrl}/library`);
+      if (!res.ok) throw new Error(`GET /library failed: ${res.status}`);
+      return (await res.json()).map(ApiDataService.toLibraryEntry);
+    } catch (e) {
+      console.warn('[DataService] using the mock item library:', e.message || e);
+      return super.getMaterials();
+    }
   }
 }
