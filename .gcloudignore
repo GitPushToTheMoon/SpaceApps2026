@@ -1,0 +1,18 @@
+# Files NOT uploaded by `gcloud run deploy --source .`
+# (Without this file gcloud uses .gitignore, which would leave out frontend/dist.)
+.git/
+.gitignore
+.env
+.env.*
+!.env.example
+gcp-key.json
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+tests/
+frontend/node_modules/
+frontend/src/
+frontend/public/
+data/assessments.jsonl
