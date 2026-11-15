@@ -1,4 +1,5 @@
 import { level5 } from '../../domain/levels';
+import { COLORS } from '../../domain/constants';
 import { Dot, TypeBadge } from '../common';
 
 function ScoreCell({ value }) {
@@ -10,10 +11,28 @@ function ScoreCell({ value }) {
   );
 }
 
-export default function SpaceTable({ rows, onSelect }) {
+export default function SpaceTable({ rows, onSelect, approved, locked, onSignoff }) {
   return (
     <div className="card table-card">
-      <div className="eyebrow table-card__title">SPACE BY SPACE</div>
+      <div className="row table-card__title">
+        <div className="eyebrow">SPACE BY SPACE</div>
+        <div className="spacer" />
+        {approved ? (
+          <span className="signoff-chip nowrap" title="Recorded in this tool for the demo; no real reviewer identities yet">
+            <Dot size={7} color={COLORS.green} />
+            Approved plan · M&amp;P ✓ · S&amp;MA ✓ · {approved} (demo)
+          </span>
+        ) : (
+          <span className="row gap-10">
+            <span className="text-sm muted nowrap">Draft · not yet reviewed</span>
+            {!locked && (
+              <button className="btn btn--outline-brand btn--xs nowrap" onClick={onSignoff}>
+                Record M&amp;P and S&amp;MA sign-off
+              </button>
+            )}
+          </span>
+        )}
+      </div>
       <div className="table-scroll">
         <table className="space-table">
           <thead>
@@ -33,7 +52,7 @@ export default function SpaceTable({ rows, onSelect }) {
                   <div className="row gap-8">
                     <TypeBadge room={r.room} />
                     <div className="col gap-2">
-                      <span>{r.room.name}</span>
+                      <span className="space-table__name">{r.room.name}</span>
                       {r.why && <span className="text-xs muted lh-135">{r.why}</span>}
                     </div>
                   </div>

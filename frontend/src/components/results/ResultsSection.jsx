@@ -68,8 +68,10 @@ export default function ResultsSection({ planner }) {
         <div className="agent-card__result">
           {tab === 'overall' && <OverallTab board={board} />}
           {tab === 'factors' && <FactorsTab board={board} phase={ui.factorPhase} onPhase={actions.setFactorPhase} selectedRoom={selectedRoom} />}
-          {tab === 'moves' && <MovesTab moves={moves} onApply={actions.applyAction} />}
-          {tab === 'table' && <SpaceTable rows={board.tableRows()} onSelect={actions.select} />}
+          {tab === 'moves' && <MovesTab moves={moves} planner={planner} />}
+          {tab === 'table' && (
+            <SpaceTable rows={board.tableRows()} onSelect={actions.select} approved={planner.approved} locked={planner.locked} onSignoff={actions.recordSignoff} />
+          )}
         </div>
 
         <AgentChat planner={planner} tab={tab} />

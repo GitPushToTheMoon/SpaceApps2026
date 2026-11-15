@@ -4,6 +4,7 @@ import ShipMap from './components/map/ShipMap';
 import RoomPanel from './components/room/RoomPanel';
 import ResultsSection from './components/results/ResultsSection';
 import ReportView from './components/report/ReportView';
+import CrewInstruction from './components/crew/CrewInstruction';
 
 export default function App() {
   const planner = usePlanner({ initialLayout: 'iss', cardDetail: 'Full', riskColouring: true });
@@ -17,6 +18,8 @@ export default function App() {
       <AppHeader planner={planner} />
 
       {planner.loadError && <div className="container banner-error">Couldn’t load data: {planner.loadError}</div>}
+
+      {planner.locked && <CrewInstruction planner={planner} />}
 
       <section className="container workspace">
         <div className="workspace__row">

@@ -148,6 +148,7 @@ export class ScoreBoard {
             delta: m.points ? `−${m.points} pts` : '',
             reason: m.reason || '',
             action,
+            raw: m, // backend move, incl. before/after scores for the crew instruction
           };
         })
         .filter(Boolean)
