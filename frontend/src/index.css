@@ -299,7 +299,22 @@ select.input { padding: 0 8px; }
 .prompt-chip { cursor: pointer; border: 1px solid var(--line); background: #fff; border-radius: 999px; padding: 7px 12px; font-size: 12.5px; white-space: nowrap; }
 .prompt-chip:hover { border-color: var(--ink); }
 
-/* Phones: the summary panel sits under the map instead of on top of it */
+/* Phones */
 @media (max-width: 720px) {
+  /* the summary panel sits under the map instead of on top of it */
   .overview { position: static; width: auto; max-width: none; margin: 12px 16px 0; box-shadow: none; }
+  /* header scrolls away instead of pinning half the screen; the conditions editor
+     scrolls with the page so its confirm box is reachable */
+  .app-header { position: static; }
+  .mission-editor { max-height: none; overflow: visible; }
+  .room-panel { position: static; min-width: 0; flex-basis: 100%; }
+  /* tighter header and mission banner */
+  .app-header__top { padding: 10px 16px; gap: 10px; }
+  .brand__sub { display: none; }
+  .mission-bar__row { padding: 8px 16px; gap: 6px 12px; }
+  .mission-bar__items { flex-basis: 100%; gap: 4px 14px; }
+  .mission-bar__item { padding-left: 8px; }
+  .mission-bar__value { font-size: 11.5px; }
+  .mission-editor__inner { padding: 12px 16px 16px; }
+  .mission-editor__cards .mission-card { flex-basis: 100% !important; }
 }
